@@ -50,7 +50,8 @@ const App: React.FC = () => {
       case 'finance':
         return <Finance />;
       case 'consultant':
-        return <Consultant />;
+        // Passa a função de navegação para permitir correção de API key
+        return <Consultant onNavigate={setActiveTab} />;
       case 'settings':
         return <Settings />;
       default:
@@ -62,10 +63,6 @@ const App: React.FC = () => {
     <div className="flex min-h-screen font-sans text-gray-100 selection:bg-indigo-500/30 overflow-hidden">
       <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
       
-      {/* 
-         Mobile: ml-0 (full width)
-         Desktop: ml-72 (space for sidebar)
-      */}
       <main className="flex-1 ml-0 md:ml-72 p-4 md:p-8 relative h-screen overflow-y-auto overflow-x-hidden">
         
         {/* Atmospheric Backgrounds */}
@@ -81,10 +78,6 @@ const App: React.FC = () => {
             <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")` }}></div>
         </div>
 
-        {/* 
-            pb-20 on mobile to account for bottom navbar (h-16 + spacing).
-            pb-10 on desktop.
-        */}
         <div className="relative z-10 max-w-[1600px] mx-auto pb-20 md:pb-10">
             {renderContent()}
         </div>

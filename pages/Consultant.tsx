@@ -1,10 +1,14 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { getStrategicAdvice } from '../services/gemini';
-import { Send, User, Bot, Sparkles, Target, Activity, BrainCircuit, BarChart3, Briefcase, AlertTriangle } from 'lucide-react';
+import { Send, User, Bot, Sparkles, Target, Activity, BrainCircuit, BarChart3, Briefcase, AlertTriangle, Settings, ChevronRight } from 'lucide-react';
 import { ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, Tooltip } from 'recharts';
 
-const Consultant: React.FC = () => {
-  const [messages, setMessages] = useState<{role: 'user' | 'model', text: string, isError?: boolean}[]>([
+interface ConsultantProps {
+  onNavigate?: (tab: string) => void;
+}
+
+const Consultant: React.FC<ConsultantProps> = ({ onNavigate }) => {
+  const [messages, setMessages] = useState<{role: 'user' | 'model', text: string, isError?: boolean, isApiKeyError?: boolean}[]>([
     { role: 'model', text: 'Olá, CEO. Sou seu Advisor Executivo. Estou conectado aos dados de mercado. Posso ajudar a reavaliar seu Pricing, analisar riscos de expansão ou auditar sua eficiência operacional. Qual o foco de hoje?' }
   ]);
   const [input, setInput] = useState('');
@@ -34,7 +38,6 @@ const Consultant: React.FC = () => {
     setMessages(prev => [...prev, { role: 'user', text: userMsg }]);
     setLoading(true);
 
-    // Simulação visual de análise enquanto carrega
     const interval = setInterval(() => {
         setAnalysisData(prev => prev.map(item => ({
             ...item,
@@ -48,15 +51,24 @@ const Consultant: React.FC = () => {
         
         clearInterval(interval);
         
-        // Verifica se a resposta parece um erro vindo do serviço
-        const isError = response.startsWith('⛔') || response.startsWith('⚠️');
-        setMessages(prev => [...prev, { role: 'model', text: response, isError }]);
+        if (response === 'API_KEY_ERROR_FLAG') {
+            setMessages(prev => [...prev, { 
+                role: 'model', 
+                text: "A chave de API configurada é inválida ou expirou.", 
+                isError: true,
+                isApiKeyError: true 
+            }]);
+        } else {
+             // Verifica se a resposta parece um erro genérico
+            const isError = response.startsWith('⛔') || response.startsWith('⚠️');
+            setMessages(prev => [...prev, { role: 'model', text: response, isError }]);
+        }
         
     } catch (error) {
         clearInterval(interval);
         setMessages(prev => [...prev, { 
             role: 'model', 
-            text: "Falha crítica ao conectar com o serviço de IA. Por favor, verifique sua conexão e a chave de API.", 
+            text: "Falha crítica ao conectar com o serviço de IA.", 
             isError: true 
         }]);
     } finally {
@@ -154,6 +166,21 @@ const Consultant: React.FC = () => {
                                                 </p>
                                             );
                                         })}
+                                        
+                                        {/* Botão de Correção de API Key */}
+                                        {msg.isApiKeyError && (
+                                            <div className="mt-4 pt-3 border-t border-red-500/30">
+                                                <p className="text-xs text-red-200 mb-2 font-medium">Você precisa inserir uma chave válida.</p>
+                                                <button 
+                                                    onClick={() => onNavigate && onNavigate('api')}
+                                                    className="flex items-center gap-2 px-4 py-2 bg-red-500/20 hover:bg-red-500/30 border border-red-500/50 rounded-lg text-red-100 text-xs font-bold transition-all hover:scale-105"
+                                                >
+                                                    <Settings size={14} />
+                                                    Corrigir nas Configurações
+                                                    <ChevronRight size={14} />
+                                                </button>
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                             </div>
