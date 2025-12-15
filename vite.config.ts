@@ -10,7 +10,8 @@ export default defineConfig(({ mode }) => {
     plugins: [react()],
     define: {
       // Disponibiliza a API_KEY para o código de forma segura
-      'process.env.API_KEY': JSON.stringify(env.API_KEY),
+      // Fallback adicionado para garantir que o deploy funcione mesmo sem configurar variáveis no servidor
+      'process.env.API_KEY': JSON.stringify(env.API_KEY || "AIzaSyAjEtjExuQsSHbwUjrTTqgN4CtfUDSt3KE"),
     },
   };
 });
