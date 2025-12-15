@@ -1,15 +1,61 @@
 import { GoogleGenAI, Type } from "@google/genai";
 
 const getClient = () => {
-  // Guidelines: API Key must be obtained exclusively from process.env.API_KEY
-  // Assume this variable is pre-configured, valid, and accessible.
-  return new GoogleGenAI({ apiKey: process.env.API_KEY });
+  let apiKey = process.env.API_KEY || '';
+  
+  // Sanitização de emergência: remove aspas e espaços que podem quebrar a requisição
+  apiKey = apiKey.replace(/["']/g, "").trim();
+
+  if (!apiKey || apiKey === "undefined") {
+    console.error("❌ API Key está vazia ou indefinida.");
+    throw new Error("API Key não configurada. Verifique seu arquivo .env");
+  }
+
+  return new GoogleGenAI({ apiKey });
+};
+
+// Sistema de Fallback em Cascata
+// Tenta 2.5 -> 2.0 -> Flash Latest
+const generateWithFallback = async (params: any) => {
+    const ai = getClient();
+    
+    // Lista de prioridade de modelos
+    const models = [
+        'gemini-2.5-flash',       // Principal (Melhor raciocínio)
+        'gemini-2.0-flash-exp',   // Secundário (Experimental, alta disponibilidade)
+        'gemini-1.5-flash-latest' // Último recurso (Estável, compatível com contas Free)
+    ];
+
+    let lastError = null;
+
+    for (const model of models) {
+        try {
+            console.log(`🚀 Tentando conectar com modelo: ${model}...`);
+            const response = await ai.models.generateContent({
+                ...params,
+                model: model
+            });
+            console.log(`✅ Sucesso com ${model}`);
+            return response;
+        } catch (error: any) {
+            console.warn(`⚠️ Falha no modelo ${model}: ${error.message}`);
+            lastError = error;
+            
+            // Se o erro for de autenticação pura (chave inválida), não adianta tentar outros modelos
+            if (error.message?.includes('API key not valid') || error.message?.includes('key expired')) {
+                throw error;
+            }
+            // Continua para o próximo modelo no loop...
+        }
+    }
+
+    // Se chegou aqui, todos falharam
+    console.error("❌ Todos os modelos de fallback falharam.");
+    throw lastError;
 };
 
 export const generateMarketingContent = async (topic: string, platform: string): Promise<string> => {
   try {
-    const ai = getClient();
-    const model = 'gemini-2.5-flash';
     const prompt = `Crie um post para o ${platform} sobre o seguinte tópico: "${topic}".
     O conteúdo deve ser engajador, profissional e visualmente descritivo.
     Inclua:
@@ -20,8 +66,7 @@ export const generateMarketingContent = async (topic: string, platform: string):
     
     Formate a resposta em Markdown.`;
 
-    const response = await ai.models.generateContent({
-      model,
+    const response = await generateWithFallback({
       contents: prompt,
       config: {
         systemInstruction: "Atue como um especialista em marketing digital de classe mundial.",
@@ -34,25 +79,18 @@ export const generateMarketingContent = async (topic: string, platform: string):
 
     return response.text;
   } catch (error: any) {
-    console.error("Erro detalhado ao gerar marketing:", error);
-    if (error.message?.includes("Chave de API")) return "⚠️ Erro de Configuração: Chave de API ausente ou inválida. Verifique o console.";
-    return `Erro ao conectar com a IA: ${error.message || "Tente novamente."}`;
+    console.error("Erro no Marketing Generator:", error);
+    if (error.message?.includes("API Key")) return "⚠️ Erro de Configuração: Chave de API inválida. Verifique o console.";
+    return `Erro de IA: ${error.message || "Serviço indisponível no momento."}`;
   }
 };
 
 export const analyzeFinancialData = async (dataContext: string): Promise<any> => {
   try {
-    const ai = getClient();
-    const model = 'gemini-2.5-flash';
-    
-    const response = await ai.models.generateContent({
-      model,
-      contents: `Analise o seguinte contexto financeiro ou cenário de negócios: "${dataContext}".
-      Gere uma projeção financeira fictícia, mas realista, para os próximos 6 meses baseada nesse cenário.
-      
-      Retorne APENAS um objeto JSON com:
-      1. 'analysis': Um resumo curto (max 2 frases) da tendência.
-      2. 'data': Um array de 6 objetos, onde cada objeto tem: 'month' (nome do mês), 'revenue' (número), 'expenses' (número), 'profit' (número).
+    const response = await generateWithFallback({
+      contents: `Analise o seguinte contexto financeiro: "${dataContext}".
+      Gere uma projeção financeira fictícia para 6 meses.
+      Retorne APENAS JSON válido.
       `,
       config: {
         responseMimeType: "application/json",
@@ -83,7 +121,7 @@ export const analyzeFinancialData = async (dataContext: string): Promise<any> =>
   } catch (error) {
     console.error("Erro na análise financeira:", error);
     return { 
-        analysis: "Não foi possível gerar a análise. Verifique sua conexão ou chave de API.", 
+        analysis: "Não foi possível conectar à IA. Verifique sua chave de API.", 
         data: [] 
     };
   }
@@ -91,27 +129,26 @@ export const analyzeFinancialData = async (dataContext: string): Promise<any> =>
 
 export const getStrategicAdvice = async (query: string, history: string[]): Promise<string> => {
     try {
-        const ai = getClient();
-        const model = 'gemini-2.5-flash';
-        
-        // Estrutura de prompt otimizada
-        const response = await ai.models.generateContent({
-            model,
-            contents: `Histórico da conversa: ${JSON.stringify(history)}\n\nPergunta do usuário: ${query}`,
+        const response = await generateWithFallback({
+            contents: `Histórico: ${JSON.stringify(history)}\n\nUsuário: ${query}`,
             config: {
-                systemInstruction: "Você é um consultor de negócios sênior para startups e PMEs. Responda de forma direta, estratégica e encorajadora. Seja breve mas valioso. Use formatação Markdown (negrito, listas) para facilitar a leitura."
+                systemInstruction: "Você é um Advisor Executivo sênior. Responda de forma estratégica, direta e visualmente organizada (Markdown)."
             }
         });
 
-        return response.text || "Sem resposta da IA.";
+        return response.text || "Sem resposta.";
     } catch (e: any) {
         console.error("Erro no Advisor:", e);
-        const errorMsg = e.message || "Erro desconhecido";
+        const errorMsg = e.message || "";
         
-        if (errorMsg.includes("API Key") || errorMsg.includes("403")) {
-            return `⛔ **Erro de Permissão (403)**: Sua chave de API parece inválida ou não tem permissão para usar o modelo 'gemini-2.5-flash'. Verifique suas credenciais no Google AI Studio.`;
+        if (errorMsg.includes("403") || errorMsg.includes("permission")) {
+            return `⛔ **Acesso Negado (403)**: Sua chave de API é válida, mas não tem permissão para acessar os modelos. \n\nSolução: Vá ao **Google AI Studio**, crie uma nova chave e certifique-se de que o projeto Google Cloud vinculado tem a API 'Generative AI' habilitada.`;
         }
         
-        return `⚠️ **Erro de Conexão**: Não foi possível contatar a inteligência artificial. \n\nDetalhe técnico: *${errorMsg}*`;
+        if (errorMsg.includes("API key")) {
+             return `🔑 **Erro de Chave**: A API Key não foi encontrada ou está inválida. Verifique seu arquivo .env.`;
+        }
+        
+        return `⚠️ **Erro de Conexão**: ${errorMsg.substring(0, 100)}...`;
     }
 }
