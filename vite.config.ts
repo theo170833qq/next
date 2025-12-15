@@ -5,14 +5,17 @@ import react from '@vitejs/plugin-react';
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, (process as any).cwd(), '');
 
+  // Chave fornecida explicitamente para correção imediata
+  // Nota: Em produção, recomenda-se mover isso para o arquivo .env
+  const fixedApiKey = "AIzaSyBYtDLsP6BJ4LnrTc_1CEAgkFj5_jwuHGg";
+
   // Ordem de prioridade para encontrar a chave
-  // Adicionado NEXT_PUBLIC_API_KEY para compatibilidade
   const rawApiKey = 
     env.API_KEY || 
     env.VITE_API_KEY || 
     env.GOOGLE_API_KEY || 
     env.NEXT_PUBLIC_API_KEY || 
-    "";
+    fixedApiKey;
 
   // Limpeza da chave (remove aspas extras ou espaços que podem vir do .env)
   const apiKey = rawApiKey.replace(/["']/g, "").trim();
@@ -20,7 +23,11 @@ export default defineConfig(({ mode }) => {
   if (!apiKey) {
     console.warn("⚠️ AVISO CRÍTICO: Nenhuma API Key encontrada. O app não funcionará corretamente.");
   } else {
-    console.log(`✅ API Key injetada (Inicia com: ${apiKey.substring(0, 4)}...)`);
+    // Mascara a chave nos logs para segurança básica
+    const masked = apiKey.length > 10 
+      ? `${apiKey.substring(0, 4)}...${apiKey.substring(apiKey.length - 4)}` 
+      : '***';
+    console.log(`✅ API Key injetada no build: ${masked}`);
   }
 
   return {
