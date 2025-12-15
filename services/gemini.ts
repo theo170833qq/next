@@ -1,15 +1,20 @@
 import { GoogleGenAI, Type } from "@google/genai";
 
 const getClient = () => {
-  let apiKey = process.env.API_KEY || '';
+  // --- CONFIGURAÇÃO MANUAL PARA VERCEL ---
+  // Chave inserida diretamente para dispensar variáveis de ambiente
+  const HARDCODED_KEY = "AIzaSyBYtDLsP6BJ4LnrTc_1CEAgkFj5_jwuHGg";
   
-  // Sanitização de emergência: remove aspas e espaços que podem quebrar a requisição
-  apiKey = apiKey.replace(/["']/g, "").trim();
-
-  if (!apiKey || apiKey === "undefined") {
-    console.error("❌ API Key está vazia ou indefinida.");
-    throw new Error("API Key não configurada. Verifique seu arquivo .env");
+  // Tenta pegar do ambiente, se falhar, usa a chave fixa
+  let apiKey = process.env.API_KEY;
+  
+  if (!apiKey || apiKey === "undefined" || apiKey === "" || apiKey.includes("undefined")) {
+      console.log("⚠️ Usando chave Hardcoded de fallback");
+      apiKey = HARDCODED_KEY;
   }
+  
+  // Sanitização de emergência
+  apiKey = apiKey.replace(/["']/g, "").trim();
 
   return new GoogleGenAI({ apiKey });
 };
@@ -80,7 +85,7 @@ export const generateMarketingContent = async (topic: string, platform: string):
     return response.text;
   } catch (error: any) {
     console.error("Erro no Marketing Generator:", error);
-    if (error.message?.includes("API Key")) return "⚠️ Erro de Configuração: Chave de API inválida. Verifique o console.";
+    if (error.message?.includes("API Key")) return "⚠️ Erro de Configuração: Chave de API inválida.";
     return `Erro de IA: ${error.message || "Serviço indisponível no momento."}`;
   }
 };
@@ -142,11 +147,11 @@ export const getStrategicAdvice = async (query: string, history: string[]): Prom
         const errorMsg = e.message || "";
         
         if (errorMsg.includes("403") || errorMsg.includes("permission")) {
-            return `⛔ **Acesso Negado (403)**: Sua chave de API é válida, mas não tem permissão para acessar os modelos. \n\nSolução: Vá ao **Google AI Studio**, crie uma nova chave e certifique-se de que o projeto Google Cloud vinculado tem a API 'Generative AI' habilitada.`;
+            return `⛔ **Acesso Negado (403)**: A chave de API não tem permissão. Verifique se a API 'Generative AI' está habilitada no Google Cloud.`;
         }
         
         if (errorMsg.includes("API key")) {
-             return `🔑 **Erro de Chave**: A API Key não foi encontrada ou está inválida. Verifique seu arquivo .env.`;
+             return `🔑 **Erro de Chave**: Chave inválida.`;
         }
         
         return `⚠️ **Erro de Conexão**: ${errorMsg.substring(0, 100)}...`;
