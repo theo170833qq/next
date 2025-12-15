@@ -1,16 +1,10 @@
 import { GoogleGenAI, Type } from "@google/genai";
 
-const apiKey = process.env.API_KEY || '';
-// Initialize Gemini
-// Note: We create a new instance per call in complex apps to handle key rotation or checking, 
-// but here a singleton is fine if the key is static.
-const ai = new GoogleGenAI({ apiKey });
-
 export const generateMarketingContent = async (topic: string, platform: string): Promise<string> => {
   try {
+    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     const model = 'gemini-2.5-flash';
-    const prompt = `Atue como um especialista em marketing digital de classe mundial.
-    Crie um post para o ${platform} sobre o seguinte tópico: "${topic}".
+    const prompt = `Crie um post para o ${platform} sobre o seguinte tópico: "${topic}".
     O conteúdo deve ser engajador, profissional e visualmente descritivo.
     Inclua:
     1. Um título chamativo (Headline).
@@ -23,6 +17,9 @@ export const generateMarketingContent = async (topic: string, platform: string):
     const response = await ai.models.generateContent({
       model,
       contents: prompt,
+      config: {
+        systemInstruction: "Atue como um especialista em marketing digital de classe mundial.",
+      }
     });
 
     return response.text || "Não foi possível gerar o conteúdo.";
@@ -34,6 +31,7 @@ export const generateMarketingContent = async (topic: string, platform: string):
 
 export const analyzeFinancialData = async (dataContext: string): Promise<any> => {
   try {
+    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     const model = 'gemini-2.5-flash';
     
     // We want structured JSON output for Recharts
@@ -82,18 +80,19 @@ export const analyzeFinancialData = async (dataContext: string): Promise<any> =>
 
 export const getStrategicAdvice = async (query: string, history: string[]): Promise<string> => {
     try {
+        const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
         const model = 'gemini-2.5-flash';
+        
         const contents = [
-            { role: 'user', parts: [{ text: `Histórico da conversa: ${JSON.stringify(history)}` }] },
-            { role: 'user', parts: [{ text: query }] }
+            { role: 'user', parts: [{ text: `Histórico da conversa: ${JSON.stringify(history)}\n\nPergunta do usuário: ${query}` }] }
         ];
 
         const response = await ai.models.generateContent({
             model,
-            contents: `Você é um consultor de negócios sênior para startups e PMEs. 
-            Responda de forma direta, estratégica e encorajadora. 
-            Seja breve mas valioso. Use formatação Markdown (negrito, listas) para facilitar a leitura.
-            Pergunta do usuário: ${query}`
+            contents: contents,
+            config: {
+                systemInstruction: "Você é um consultor de negócios sênior para startups e PMEs. Responda de forma direta, estratégica e encorajadora. Seja breve mas valioso. Use formatação Markdown (negrito, listas) para facilitar a leitura."
+            }
         });
 
         return response.text || "Sem resposta.";
