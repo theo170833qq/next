@@ -1,34 +1,37 @@
 import { GoogleGenAI, Type } from "@google/genai";
 
 const getClient = () => {
-  // --- CONFIGURAÇÃO MANUAL PARA VERCEL ---
-  // Chave inserida diretamente para dispensar variáveis de ambiente
+  // 1. TENTA CHAVE SALVA MANUALMENTE PELO USUÁRIO (LocalStorage)
+  // Isso permite que você corrija o erro direto na tela de Configurações
+  const localKey = localStorage.getItem('user_custom_api_key');
+  if (localKey && localKey.length > 10) {
+      return new GoogleGenAI({ apiKey: localKey });
+  }
+
+  // 2. CHAVE HARDCODED DE FALLBACK (A que você forneceu)
+  // Se esta chave estiver inválida, o usuário deve usar a opção manual nas Configurações
   const HARDCODED_KEY = "AIzaSyBYtDLsP6BJ4LnrTc_1CEAgkFj5_jwuHGg";
   
-  // Tenta pegar do ambiente, se falhar, usa a chave fixa
   let apiKey = process.env.API_KEY;
   
   if (!apiKey || apiKey === "undefined" || apiKey === "" || apiKey.includes("undefined")) {
-      console.log("⚠️ Usando chave Hardcoded de fallback");
       apiKey = HARDCODED_KEY;
   }
   
-  // Sanitização de emergência
   apiKey = apiKey.replace(/["']/g, "").trim();
 
   return new GoogleGenAI({ apiKey });
 };
 
 // Sistema de Fallback em Cascata
-// Tenta 2.5 -> 2.0 -> Flash Latest
 const generateWithFallback = async (params: any) => {
     const ai = getClient();
     
-    // Lista de prioridade de modelos
+    // Tenta modelos mais antigos se o Flash 2.5 falhar (comum em chaves da camada gratuita)
     const models = [
-        'gemini-2.5-flash',       // Principal (Melhor raciocínio)
-        'gemini-2.0-flash-exp',   // Secundário (Experimental, alta disponibilidade)
-        'gemini-1.5-flash-latest' // Último recurso (Estável, compatível com contas Free)
+        'gemini-2.5-flash',
+        'gemini-1.5-flash',
+        'gemini-1.5-flash-latest' 
     ];
 
     let lastError = null;
@@ -46,16 +49,13 @@ const generateWithFallback = async (params: any) => {
             console.warn(`⚠️ Falha no modelo ${model}: ${error.message}`);
             lastError = error;
             
-            // Se o erro for de autenticação pura (chave inválida), não adianta tentar outros modelos
+            // Se o erro for explícito de chave inválida, não adianta tentar outros modelos
             if (error.message?.includes('API key not valid') || error.message?.includes('key expired')) {
-                throw error;
+                throw new Error("A Chave de API é inválida ou expirou. Por favor, atualize-a nas Configurações.");
             }
-            // Continua para o próximo modelo no loop...
         }
     }
 
-    // Se chegou aqui, todos falharam
-    console.error("❌ Todos os modelos de fallback falharam.");
     throw lastError;
 };
 
@@ -85,7 +85,7 @@ export const generateMarketingContent = async (topic: string, platform: string):
     return response.text;
   } catch (error: any) {
     console.error("Erro no Marketing Generator:", error);
-    if (error.message?.includes("API Key")) return "⚠️ Erro de Configuração: Chave de API inválida.";
+    if (error.message?.includes("API key")) return "⚠️ A Chave de API informada é inválida. Vá em 'Ajustes' > 'Sistema & API' e insira uma chave válida.";
     return `Erro de IA: ${error.message || "Serviço indisponível no momento."}`;
   }
 };
@@ -126,7 +126,7 @@ export const analyzeFinancialData = async (dataContext: string): Promise<any> =>
   } catch (error) {
     console.error("Erro na análise financeira:", error);
     return { 
-        analysis: "Não foi possível conectar à IA. Verifique sua chave de API.", 
+        analysis: "Não foi possível conectar à IA. Verifique sua chave de API nas Configurações.", 
         data: [] 
     };
   }
@@ -147,11 +147,11 @@ export const getStrategicAdvice = async (query: string, history: string[]): Prom
         const errorMsg = e.message || "";
         
         if (errorMsg.includes("403") || errorMsg.includes("permission")) {
-            return `⛔ **Acesso Negado (403)**: A chave de API não tem permissão. Verifique se a API 'Generative AI' está habilitada no Google Cloud.`;
+            return `⛔ **Acesso Negado**: A chave atual não tem permissão para usar este modelo. Tente gerar uma nova chave no Google AI Studio e insira nas Configurações.`;
         }
         
         if (errorMsg.includes("API key")) {
-             return `🔑 **Erro de Chave**: Chave inválida.`;
+             return `🔑 **Chave Inválida**: A chave configurada não está funcionando. Vá em 'Configurações' > 'Sistema & API' e insira uma nova chave.`;
         }
         
         return `⚠️ **Erro de Conexão**: ${errorMsg.substring(0, 100)}...`;

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { User, Bell, Shield, Key, Save, Loader2, LogOut, CreditCard, Mail, Server, Wifi, CheckCircle2, XCircle, RefreshCw, Trash2 } from 'lucide-react';
+import { User, Bell, Shield, Key, Save, Loader2, LogOut, CreditCard, Mail, Server, Wifi, CheckCircle2, XCircle, RefreshCw, Trash2, Eye, EyeOff, AlertTriangle } from 'lucide-react';
 import { checkDatabaseConnection } from '../services/supabase';
 import { useAuth } from '../context/AuthContext';
 import { useCompany } from '../context/CompanyContext';
@@ -12,6 +12,10 @@ const Settings: React.FC = () => {
   const [dbStatus, setDbStatus] = useState<'checking' | 'online' | 'offline'>('checking');
   const [latency, setLatency] = useState(0);
   
+  // Custom API Key State
+  const [customKey, setCustomKey] = useState('');
+  const [showKey, setShowKey] = useState(false);
+  
   const [notificationState, setNotificationState] = useState({
     email: true,
     push: false,
@@ -21,13 +25,14 @@ const Settings: React.FC = () => {
   useEffect(() => {
     if (activeSection === 'api') {
       runSystemCheck();
+      const savedKey = localStorage.getItem('user_custom_api_key');
+      if (savedKey) setCustomKey(savedKey);
     }
   }, [activeSection]);
 
   const runSystemCheck = async () => {
     setDbStatus('checking');
     const result = await checkDatabaseConnection();
-    // Simula um delay pequeno para visualização se for muito rápido
     setTimeout(() => {
         setDbStatus(result.status);
         setLatency(result.latency);
@@ -36,11 +41,18 @@ const Settings: React.FC = () => {
 
   const handleSave = () => {
     setLoading(true);
-    // Simulating API call
+    
+    // Salva a chave customizada se houver
+    if (activeSection === 'api' && customKey) {
+        localStorage.setItem('user_custom_api_key', customKey.trim());
+    } else if (activeSection === 'api' && !customKey) {
+        localStorage.removeItem('user_custom_api_key');
+    }
+
     setTimeout(() => {
       setLoading(false);
-      alert("Configurações salvas com sucesso!");
-    }, 1500);
+      alert("Configurações salvas e aplicadas com sucesso!");
+    }, 1000);
   };
 
   const handleLogout = async () => {
@@ -48,7 +60,7 @@ const Settings: React.FC = () => {
   };
   
   const handleResetData = () => {
-      if(confirm("Tem certeza? Isso apagará os dados da empresa (Faturamento, Nome, etc) e reiniciará o Onboarding.")){
+      if(confirm("Tem certeza? Isso apagará os dados da empresa e reiniciará o Onboarding.")){
           clearCompanyData();
           window.location.reload();
       }
@@ -57,8 +69,8 @@ const Settings: React.FC = () => {
   const sections = [
     { id: 'profile', label: 'Perfil', icon: User },
     { id: 'notifications', label: 'Notificações', icon: Bell },
-    { id: 'security', label: 'Segurança', icon: Shield },
     { id: 'api', label: 'Sistema & API', icon: Server },
+    { id: 'security', label: 'Segurança', icon: Shield },
     { id: 'billing', label: 'Assinatura', icon: CreditCard },
   ];
 
@@ -116,7 +128,7 @@ const Settings: React.FC = () => {
            </button>
         </div>
 
-        {/* Right Column - Forms - Conditionally rendered based on section */}
+        {/* Right Column - Forms */}
         <div className="lg:col-span-2 space-y-6">
             
             {/* Personal Info */}
@@ -136,19 +148,6 @@ const Settings: React.FC = () => {
                             <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Empresa</label>
                             <input type="text" defaultValue={companyData?.companyName} className="w-full bg-onyx-900 border border-white/10 rounded-xl p-3 text-white focus:ring-1 focus:ring-indigo-500 outline-none transition-all" />
                         </div>
-                        <div className="space-y-2 md:col-span-2">
-                            <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Email Corporativo</label>
-                            <div className="relative">
-                                <Mail className="absolute left-3 top-3.5 text-gray-500" size={18} />
-                                <input 
-                                    type="email" 
-                                    defaultValue={user?.email || ''} 
-                                    disabled
-                                    className="w-full bg-onyx-900/50 border border-white/10 rounded-xl pl-10 pr-3 py-3 text-gray-400 cursor-not-allowed outline-none" 
-                                />
-                            </div>
-                            <p className="text-[10px] text-gray-500">Para alterar seu email, entre em contato com o suporte.</p>
-                        </div>
                     </div>
 
                     <div className="mt-8 pt-8 border-t border-white/5">
@@ -158,45 +157,62 @@ const Settings: React.FC = () => {
                             className="flex items-center text-red-400 hover:text-red-300 text-sm font-bold"
                         >
                             <Trash2 size={16} className="mr-2" />
-                            Resetar Dados da Empresa (Voltar ao Onboarding)
+                            Resetar Dados da Empresa
                         </button>
                     </div>
                 </div>
             )}
 
-            {/* Notifications */}
-            {activeSection === 'notifications' && (
-                <div className="glass-card rounded-3xl p-6 md:p-8 border border-white/5 animate-fade-in">
-                    <h3 className="text-lg font-bold text-white flex items-center mb-6">
-                        <Bell className="mr-2 text-pink-400" size={20}/> Preferências de Notificação
-                    </h3>
-                    <div className="space-y-4">
-                        {[
-                            { key: 'email', label: 'Resumo Semanal por Email', desc: 'Receba insights de performance toda segunda-feira.' },
-                            { key: 'push', label: 'Notificações Push no Navegador', desc: 'Alertas em tempo real sobre metas atingidas.' },
-                            { key: 'marketing', label: 'Novidades de Produto', desc: 'Seja o primeiro a saber sobre novas features da IA.' }
-                        ].map((item: any) => (
-                            <div key={item.key} className="flex items-center justify-between p-4 rounded-xl bg-white/5 border border-white/5">
-                                <div className="pr-4">
-                                    <h4 className="text-white font-medium text-sm">{item.label}</h4>
-                                    <p className="text-gray-500 text-xs mt-1">{item.desc}</p>
-                                </div>
-                                <button 
-                                    onClick={() => setNotificationState({...notificationState, [item.key]: !notificationState[item.key as keyof typeof notificationState]})}
-                                    className={`w-12 h-6 rounded-full p-1 shrink-0 transition-colors duration-300 ${notificationState[item.key as keyof typeof notificationState] ? 'bg-indigo-500' : 'bg-gray-700'}`}
-                                >
-                                    <div className={`w-4 h-4 bg-white rounded-full transition-transform duration-300 ${notificationState[item.key as keyof typeof notificationState] ? 'translate-x-6' : 'translate-x-0'}`}></div>
-                                </button>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            )}
-
-            {/* System Status & API Keys */}
-            {(activeSection === 'api' || activeSection === 'security' || activeSection === 'billing') && (
+            {/* API Keys Configuration */}
+            {activeSection === 'api' && (
                 <div className="space-y-6 animate-fade-in">
-                    {/* Database Status Card */}
+                    
+                    {/* Manual API Key Input */}
+                    <div className="glass-card rounded-3xl p-6 md:p-8 border border-white/5 relative overflow-hidden">
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/10 rounded-full blur-3xl -mr-10 -mt-10"></div>
+                        
+                        <h3 className="text-lg font-bold text-white flex items-center mb-4 relative z-10">
+                            <Key className="mr-2 text-yellow-400" size={20}/> Configuração de IA (Gemini)
+                        </h3>
+                        
+                        <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-xl p-4 mb-6 flex items-start gap-3">
+                            <AlertTriangle className="text-yellow-400 shrink-0 mt-0.5" size={16} />
+                            <div>
+                                <p className="text-yellow-200 text-xs font-bold">Correção de Chave Inválida</p>
+                                <p className="text-yellow-200/70 text-[11px] mt-1">
+                                    Se você está vendo erros de "API Key Inválida", insira sua própria chave abaixo. Ela terá prioridade sobre a configuração do sistema.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div className="space-y-3 relative z-10">
+                            <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Sua Chave de API Google (Gemini)</label>
+                            <div className="relative group">
+                                <div className="absolute inset-0 bg-indigo-500/10 rounded-xl blur opacity-0 group-focus-within:opacity-100 transition-opacity duration-500"></div>
+                                <div className="relative flex items-center">
+                                    <Key className="absolute left-4 text-gray-500" size={18} />
+                                    <input 
+                                        type={showKey ? "text" : "password"}
+                                        value={customKey}
+                                        onChange={(e) => setCustomKey(e.target.value)}
+                                        placeholder="Cole sua chave aqui (começa com AIza...)"
+                                        className="w-full bg-onyx-950 border border-white/10 rounded-xl pl-12 pr-12 py-4 text-white placeholder-gray-600 focus:ring-1 focus:ring-indigo-500 outline-none transition-all font-mono text-sm"
+                                    />
+                                    <button 
+                                        onClick={() => setShowKey(!showKey)}
+                                        className="absolute right-4 text-gray-500 hover:text-white transition-colors"
+                                    >
+                                        {showKey ? <EyeOff size={18} /> : <Eye size={18} />}
+                                    </button>
+                                </div>
+                            </div>
+                            <p className="text-[10px] text-gray-500 pl-1">
+                                Não tem uma chave? <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noreferrer" className="text-indigo-400 hover:underline">Gere uma gratuitamente no Google AI Studio</a>.
+                            </p>
+                        </div>
+                    </div>
+
+                    {/* Database Status */}
                     <div className="glass-card rounded-3xl p-6 md:p-8 border border-white/5">
                         <div className="flex items-center justify-between mb-6">
                             <h3 className="text-lg font-bold text-white flex items-center">
@@ -211,52 +227,36 @@ const Settings: React.FC = () => {
                             </button>
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {/* Connection Widget */}
-                            <div className="p-4 rounded-xl bg-onyx-950 border border-white/5 flex items-center justify-between">
-                                <div className="flex items-center gap-3">
-                                    <div className={`w-10 h-10 rounded-full flex items-center justify-center ${dbStatus === 'online' ? 'bg-emerald-500/10' : dbStatus === 'offline' ? 'bg-red-500/10' : 'bg-gray-500/10'}`}>
-                                        <Wifi size={18} className={dbStatus === 'online' ? 'text-emerald-400' : dbStatus === 'offline' ? 'text-red-400' : 'text-gray-400'} />
-                                    </div>
-                                    <div>
-                                        <p className="text-sm font-bold text-white">Banco de Dados</p>
-                                        <p className="text-xs text-gray-500">Supabase Postgres</p>
-                                    </div>
+                        <div className="p-4 rounded-xl bg-onyx-950 border border-white/5 flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                                <div className={`w-10 h-10 rounded-full flex items-center justify-center ${dbStatus === 'online' ? 'bg-emerald-500/10' : dbStatus === 'offline' ? 'bg-red-500/10' : 'bg-gray-500/10'}`}>
+                                    <Wifi size={18} className={dbStatus === 'online' ? 'text-emerald-400' : dbStatus === 'offline' ? 'text-red-400' : 'text-gray-400'} />
                                 </div>
-                                
-                                <div className="flex flex-col items-end">
-                                    {dbStatus === 'checking' && <span className="text-xs text-yellow-400 flex items-center"><Loader2 size={12} className="animate-spin mr-1"/> Verificando...</span>}
-                                    {dbStatus === 'online' && <span className="text-xs text-emerald-400 flex items-center font-bold"><CheckCircle2 size={12} className="mr-1"/> Operacional</span>}
-                                    {dbStatus === 'offline' && <span className="text-xs text-red-400 flex items-center font-bold"><XCircle size={12} className="mr-1"/> Erro de Conexão</span>}
-                                    
-                                    {dbStatus === 'online' && <span className="text-[10px] text-gray-600 mt-1">{latency}ms latência</span>}
+                                <div>
+                                    <p className="text-sm font-bold text-white">Banco de Dados</p>
+                                    <p className="text-xs text-gray-500">Supabase Postgres</p>
                                 </div>
+                            </div>
+                            
+                            <div className="flex flex-col items-end">
+                                {dbStatus === 'checking' && <span className="text-xs text-yellow-400 flex items-center"><Loader2 size={12} className="animate-spin mr-1"/> Verificando...</span>}
+                                {dbStatus === 'online' && <span className="text-xs text-emerald-400 flex items-center font-bold"><CheckCircle2 size={12} className="mr-1"/> Operacional</span>}
+                                {dbStatus === 'offline' && <span className="text-xs text-red-400 flex items-center font-bold"><XCircle size={12} className="mr-1"/> Erro de Conexão</span>}
+                                {dbStatus === 'online' && <span className="text-[10px] text-gray-600 mt-1">{latency}ms latência</span>}
                             </div>
                         </div>
                     </div>
+                </div>
+            )}
 
-                    {/* API Keys */}
-                    <div className="glass-card rounded-3xl p-6 md:p-8 border border-white/5">
-                        <h3 className="text-lg font-bold text-white flex items-center mb-6">
-                            <Key className="mr-2 text-yellow-400" size={20}/> Chaves de API
-                        </h3>
-                        <div className="p-4 rounded-xl bg-onyx-950 border border-dashed border-gray-700">
-                            <div className="flex justify-between items-center mb-2">
-                                <span className="text-xs font-bold text-gray-500">PUBLIC SUPABASE URL</span>
-                                <span className="text-xs text-green-400 bg-green-400/10 px-2 py-0.5 rounded border border-green-400/20">Configurado</span>
-                            </div>
-                            <code className="text-gray-300 font-mono text-sm block bg-black/30 p-2 rounded truncate">
-                                https://ffgoqeturuyhaqtxztga.supabase.co
-                            </code>
-                            <p className="text-xs text-gray-500 mt-2">Conectado ao projeto principal.</p>
-                        </div>
-                        
-                        {activeSection !== 'api' && (
-                            <p className="mt-6 text-sm text-gray-400 text-center italic">
-                                Seções de Segurança e Assinatura em desenvolvimento para o plano Enterprise.
-                            </p>
-                        )}
-                    </div>
+            {/* Other Sections Placeholders */}
+            {(activeSection === 'notifications' || activeSection === 'security' || activeSection === 'billing') && (
+                <div className="glass-card rounded-3xl p-6 md:p-8 border border-white/5 animate-fade-in text-center py-20">
+                    <Shield className="mx-auto text-gray-600 mb-4" size={48} />
+                    <h3 className="text-xl font-bold text-white mb-2">Em Desenvolvimento</h3>
+                    <p className="text-gray-500 text-sm max-w-md mx-auto">
+                        Esta funcionalidade estará disponível na próxima atualização do sistema Enterprise.
+                    </p>
                 </div>
             )}
 
@@ -264,7 +264,7 @@ const Settings: React.FC = () => {
                 <button 
                     onClick={handleSave}
                     disabled={loading}
-                    className="w-full md:w-auto px-8 py-3 bg-white text-onyx-950 font-bold rounded-xl hover:bg-gray-200 transition-colors flex items-center justify-center disabled:opacity-70"
+                    className="w-full md:w-auto px-8 py-3 bg-white text-onyx-950 font-bold rounded-xl hover:bg-gray-200 transition-colors flex items-center justify-center disabled:opacity-70 shadow-[0_0_20px_rgba(255,255,255,0.15)]"
                 >
                     {loading ? <Loader2 className="animate-spin mr-2" size={18} /> : <Save className="mr-2" size={18} />}
                     {loading ? 'Salvando...' : 'Salvar Alterações'}
