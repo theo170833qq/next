@@ -186,7 +186,7 @@ const Dashboard: React.FC<DashboardProps> = ({ setActiveTab }) => {
                     strokeWidth={4} 
                     fillOpacity={1} 
                     fill="url(#colorRevenue)" 
-                    activeDot={{r: 8, strokeWidth: 0, fill: '#fff', shadow: '0 0 20px #6366F1'}} 
+                    activeDot={{r: 8, strokeWidth: 0, fill: '#fff'}} 
                 />
                 <Area 
                     type="monotone" 
