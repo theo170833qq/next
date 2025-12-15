@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { generateMarketingContent } from '../services/gemini';
-import { Send, Copy, Loader2, Instagram, Linkedin, Twitter, Sparkles, Image as ImageIcon, Heart, MessageCircle, Share2, Bookmark, Music, Zap, TrendingUp, Activity, BarChart2 } from 'lucide-react';
-import { ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, Tooltip } from 'recharts';
+import { Copy, Loader2, Instagram, Linkedin, Twitter, Sparkles, Image as ImageIcon, Heart, MessageCircle, Share2, Bookmark, Music, Zap, TrendingUp, Activity, BarChart2, Hash, Wand2 } from 'lucide-react';
+import { ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar } from 'recharts';
 
 const Marketing: React.FC = () => {
   const [topic, setTopic] = useState('');
@@ -9,7 +9,6 @@ const Marketing: React.FC = () => {
   const [generatedContent, setGeneratedContent] = useState('');
   const [loading, setLoading] = useState(false);
   
-  // Dados simulados para a análise visual de "DNA Viral"
   const [viralMetrics, setViralMetrics] = useState([
     { subject: 'Emoção', A: 0, fullMark: 100 },
     { subject: 'Storytelling', A: 0, fullMark: 100 },
@@ -22,7 +21,6 @@ const Marketing: React.FC = () => {
     if (!topic) return;
     setLoading(true);
     
-    // Animação dos gráficos durante o carregamento
     const interval = setInterval(() => {
         setViralMetrics(prev => prev.map(m => ({ ...m, A: Math.floor(Math.random() * 80) + 20 })));
     }, 150);
@@ -33,7 +31,6 @@ const Marketing: React.FC = () => {
     setLoading(false);
     setGeneratedContent(content);
     
-    // Definir métricas finais "reais" baseadas no sucesso da geração (simulado para visual)
     setViralMetrics([
         { subject: 'Emoção', A: 85, fullMark: 100 },
         { subject: 'Storytelling', A: 92, fullMark: 100 },
@@ -50,6 +47,13 @@ const Marketing: React.FC = () => {
     { name: 'Twitter', icon: Twitter, color: 'text-sky-400', bg: 'bg-sky-400/10 border-sky-400/20', gradient: 'from-sky-400 to-blue-500' },
   ];
 
+  const quickPrompts = [
+      "Lançamento de produto: SaaS financeiro",
+      "Bastidores: Um dia na vida do CEO",
+      "Case de sucesso: Cliente economizou 30%",
+      "Polêmica: Por que o modelo tradicional morreu"
+  ];
+
   const activePlatformData = platforms.find(p => p.name === platform);
 
   return (
@@ -64,18 +68,6 @@ const Marketing: React.FC = () => {
             </h1>
             <p className="text-gray-400 mt-1">Engenharia reversa de conteúdo viral.</p>
         </div>
-        
-        {generatedContent && (
-             <div className="flex items-center gap-4 bg-emerald-500/5 border border-emerald-500/20 px-4 py-2 rounded-xl">
-                <div className="text-right">
-                    <p className="text-[10px] text-emerald-400 font-bold uppercase tracking-wider">Potencial Viral</p>
-                    <p className="text-xl font-black text-white">94<span className="text-sm text-emerald-500">%</span></p>
-                </div>
-                <div className="h-10 w-10 rounded-full bg-emerald-500/20 flex items-center justify-center">
-                    <TrendingUp className="text-emerald-400" size={20} />
-                </div>
-             </div>
-        )}
       </header>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 h-full">
@@ -118,7 +110,7 @@ const Marketing: React.FC = () => {
                 {/* Text Input */}
                 <div>
                     <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 block flex items-center gap-2">
-                        <Sparkles size={14} className="text-indigo-400" /> Prompt Criativo
+                        <Sparkles size={14} className="text-indigo-400" /> Ideia ou Tópico
                     </label>
                     <div className="relative group/input">
                         <div className="absolute -inset-0.5 bg-gradient-to-r from-indigo-500 to-pink-500 rounded-xl opacity-20 group-hover/input:opacity-50 transition duration-500 blur-sm"></div>
@@ -128,6 +120,18 @@ const Marketing: React.FC = () => {
                         className="relative w-full bg-onyx-950 border border-white/10 rounded-xl p-5 text-white placeholder-gray-600 focus:outline-none focus:ring-1 focus:ring-indigo-500/50 h-40 resize-none transition-all"
                         placeholder="Ex: Crie um post provocativo sobre erros financeiros que empreendedores cometem no primeiro ano..."
                         />
+                    </div>
+                    {/* Quick Prompts */}
+                    <div className="mt-3 flex flex-wrap gap-2">
+                        {quickPrompts.map((p, i) => (
+                            <button 
+                                key={i}
+                                onClick={() => setTopic(p)} 
+                                className="text-[10px] px-2 py-1 bg-white/5 hover:bg-white/10 border border-white/5 rounded-md text-gray-400 hover:text-indigo-300 transition-colors"
+                            >
+                                {p}
+                            </button>
+                        ))}
                     </div>
                 </div>
 
@@ -139,7 +143,7 @@ const Marketing: React.FC = () => {
                 >
                 <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                 <span className="relative z-10 flex items-center group-hover:text-white transition-colors">
-                    {loading ? <Loader2 className="animate-spin mr-2" /> : <Sparkles className="mr-2" size={18} />}
+                    {loading ? <Loader2 className="animate-spin mr-2" /> : <Wand2 className="mr-2" size={18} />}
                     {loading ? "Processando..." : "Gerar Conteúdo"}
                 </span>
                 </button>
@@ -150,13 +154,12 @@ const Marketing: React.FC = () => {
             {(loading || generatedContent) && (
                 <div className="glass-card rounded-3xl p-6 border border-white/5 animate-slide-up">
                     <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4 flex items-center">
-                        <Activity className="mr-2 text-pink-500" size={14} /> Análise de DNA Viral
+                        <Activity className="mr-2 text-pink-500" size={14} /> Score de Viralidade
                     </h3>
                     <div className="h-48 w-full -ml-4 relative">
-                         {/* Centered Score */}
                          <div className="absolute inset-0 flex items-center justify-center pointer-events-none pl-4 pb-2 z-0">
                             <div className="w-16 h-16 rounded-full bg-indigo-500/10 flex items-center justify-center animate-pulse-slow">
-                                <div className="w-2 h-2 bg-indigo-500 rounded-full"></div>
+                                <div className="text-xl font-bold text-white">98</div>
                             </div>
                          </div>
                          
@@ -184,117 +187,90 @@ const Marketing: React.FC = () => {
         <div className="lg:col-span-7 flex flex-col gap-6">
             
             {/* The Phone Mockup for Preview */}
-            <div className="glass-card rounded-[2.5rem] p-8 border border-white/5 flex-1 relative min-h-[600px] flex items-center justify-center bg-black/40 shadow-2xl overflow-hidden">
-                {/* Decorative Background Elements behind phone */}
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] bg-gradient-to-tr from-indigo-500/10 via-transparent to-pink-500/10 blur-3xl pointer-events-none"></div>
+            <div className="glass-card rounded-[3rem] p-8 border border-white/5 flex-1 relative min-h-[600px] flex items-center justify-center bg-black shadow-2xl overflow-hidden ring-8 ring-onyx-900">
                 
                 {!generatedContent && !loading && (
                     <div className="text-center text-gray-500 z-10">
-                        <div className="w-24 h-24 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-6 border border-white/5 group hover:border-indigo-500/30 transition-colors duration-500">
-                            <ImageIcon size={32} className="group-hover:text-indigo-400 transition-colors" />
+                        <div className="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-6 border border-white/5 group hover:border-indigo-500/30 transition-colors duration-500">
+                            <ImageIcon size={28} className="group-hover:text-indigo-400 transition-colors" />
                         </div>
-                        <h3 className="text-xl font-bold text-white mb-2">Aguardando Input</h3>
-                        <p className="font-light text-sm max-w-xs mx-auto">Configure a plataforma e o tópico para visualizar o preview em tempo real.</p>
+                        <h3 className="text-lg font-bold text-white mb-2">Preview em Tempo Real</h3>
+                        <p className="font-light text-xs max-w-xs mx-auto text-gray-600">Selecione uma plataforma ao lado para começar.</p>
                     </div>
                 )}
                 
                 {loading && (
-                    <div className="text-center z-10">
-                        <div className="relative w-32 h-32 mx-auto mb-6">
-                            <div className="absolute inset-0 border-4 border-indigo-500/20 rounded-full"></div>
-                            <div className="absolute inset-0 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
-                            <div className="absolute inset-4 border-4 border-pink-500/20 rounded-full"></div>
-                            <div className="absolute inset-4 border-4 border-pink-500 border-b-transparent rounded-full animate-spin direction-reverse duration-700"></div>
-                        </div>
-                        <h3 className="text-xl font-bold text-white mb-1 animate-pulse">Criando...</h3>
-                        <p className="text-indigo-300 text-xs font-mono">NEURAL_ENGINE_PROCESSING</p>
-                    </div>
+                     <div className="flex flex-col items-center">
+                        <Loader2 className="animate-spin text-indigo-500 mb-4" size={32} />
+                        <p className="text-xs font-mono text-indigo-400">GERANDO_COPY_E_DESIGN...</p>
+                     </div>
                 )}
 
                 {generatedContent && !loading && (
-                     <div className="w-[320px] bg-white text-black rounded-[2rem] overflow-hidden shadow-[0_0_50px_rgba(0,0,0,0.5)] animate-slide-up relative z-10 border-4 border-onyx-900">
-                        {/* Status Bar Mockup */}
-                        <div className="h-6 bg-white flex justify-between items-center px-6 pt-2">
-                             <span className="text-[10px] font-bold">9:41</span>
+                     <div className="w-full max-w-[340px] bg-white text-black rounded-[2rem] overflow-hidden shadow-2xl animate-slide-up relative z-10 flex flex-col h-full max-h-[650px]">
+                        
+                        {/* Fake Phone Header */}
+                        <div className="h-8 bg-white flex justify-between items-center px-6 pt-2 shrink-0">
+                             <span className="text-[10px] font-bold">19:42</span>
                              <div className="flex gap-1">
                                 <div className="w-3 h-3 bg-black rounded-full"></div>
                                 <div className="w-3 h-3 bg-transparent border border-black rounded-full"></div>
                              </div>
                         </div>
 
-                        {/* Social Header */}
-                        <div className="p-4 flex items-center border-b border-gray-100">
-                            <div className={`w-9 h-9 rounded-full bg-gradient-to-tr ${activePlatformData?.gradient} p-[2px]`}>
+                        {/* Social App Header */}
+                        <div className="p-3 flex items-center border-b border-gray-100 shrink-0">
+                            <div className={`w-8 h-8 rounded-full bg-gradient-to-tr ${activePlatformData?.gradient} p-[2px]`}>
                                 <div className="w-full h-full bg-white rounded-full p-0.5 overflow-hidden">
                                     <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=NextUser" className="w-full h-full object-cover" alt="avatar" />
                                 </div>
                             </div>
-                            <div className="ml-3">
-                                <span className="block font-bold text-sm leading-none mb-0.5">sua_empresa</span>
-                                <span className="block text-[10px] text-gray-400 leading-none">Original Audio</span>
+                            <div className="ml-2">
+                                <span className="block font-bold text-xs leading-none mb-0.5">sua_marca</span>
+                                <span className="block text-[9px] text-gray-400 leading-none">Sponsored</span>
                             </div>
-                            <span className="ml-auto text-gray-400">•••</span>
+                            <span className="ml-auto text-gray-400 text-xs">•••</span>
                         </div>
 
-                        {/* Image Placeholder */}
-                        <div className="aspect-[4/5] bg-gray-100 flex items-center justify-center relative overflow-hidden group">
-                             <div className={`absolute inset-0 bg-gradient-to-br ${activePlatformData?.gradient} opacity-5 group-hover:opacity-10 transition-opacity`}></div>
-                             <div className="text-center p-8 z-10">
-                                <ImageIcon className="mx-auto text-gray-300 mb-3" size={40} />
-                                <div className="bg-white/80 backdrop-blur-sm p-3 rounded-lg border border-gray-200 shadow-sm">
-                                    <p className="text-[10px] text-gray-500 font-bold uppercase mb-1 text-left">Sugestão Visual IA:</p>
-                                    <p className="text-xs text-gray-800 italic text-left leading-relaxed">
-                                        "Imagem minimalista com alto contraste, fundo escuro, destacando o produto principal com iluminação neon..."
+                        {/* Scrollable Content */}
+                        <div className="overflow-y-auto no-scrollbar pb-10">
+                            {/* Image Placeholder */}
+                            <div className="aspect-[4/5] bg-gray-100 flex items-center justify-center relative group overflow-hidden">
+                                <div className={`absolute inset-0 bg-gradient-to-br ${activePlatformData?.gradient} opacity-5`}></div>
+                                <div className="p-6 text-center">
+                                    <ImageIcon className="mx-auto text-gray-300 mb-2" size={32} />
+                                    <p className="text-[10px] text-gray-400 uppercase font-bold tracking-widest mb-2">Prompt de Imagem</p>
+                                    <p className="text-[11px] text-gray-600 italic leading-tight px-4">
+                                        "Uma imagem cinematográfica de..." (Ver prompt completo abaixo)
                                     </p>
                                 </div>
-                             </div>
-                             
-                             {/* Floating Reaction Bubbles (Decoration) */}
-                             <div className="absolute bottom-4 right-4 flex flex-col gap-2 opacity-50">
-                                 <Heart size={20} className="text-white fill-white drop-shadow-md" />
-                                 <MessageCircle size={20} className="text-white drop-shadow-md" />
-                                 <Share2 size={20} className="text-white drop-shadow-md" />
-                             </div>
-                        </div>
-
-                        {/* Actions Bar */}
-                        <div className="px-4 py-3 flex justify-between text-gray-800">
-                            <div className="flex space-x-4">
-                                <Heart size={24} className="cursor-pointer hover:text-red-500 transition-colors hover:scale-110 duration-200" />
-                                <MessageCircle size={24} className="cursor-pointer hover:text-blue-500 transition-colors hover:scale-110 duration-200" />
-                                <Share2 size={24} className="cursor-pointer hover:text-green-500 transition-colors hover:scale-110 duration-200" />
                             </div>
-                            <Bookmark size={24} className="cursor-pointer hover:text-yellow-500 transition-colors" />
-                        </div>
 
-                        {/* Caption Area */}
-                        <div className="px-4 pb-6">
-                            <p className="text-sm font-bold mb-1">10.428 curtidas</p>
-                            <div className="text-sm text-gray-800 space-y-1 max-h-40 overflow-y-auto custom-scrollbar-light pr-1">
-                                <span className="font-bold mr-1">sua_empresa</span>
-                                {/* Parser */}
-                                {generatedContent.split('\n').map((line, i) => {
-                                    if(line.trim() === '') return <br key={i}/>;
-                                    // Hashtags
-                                    if(line.includes('#')) {
-                                        return line.split(' ').map((word, w) => 
-                                            word.startsWith('#') ? <span key={w} className="text-blue-600 font-medium mr-1 cursor-pointer hover:underline">{word}</span> : word + ' '
-                                        )
-                                    }
-                                    // Bolding
-                                    const parts = line.split('**');
-                                    if(parts.length > 1) {
-                                        return (
-                                            <span key={i} className="block mt-1">
-                                                {parts.map((part, p) => p % 2 === 1 ? <span key={p} className="font-bold">{part}</span> : part)}
-                                            </span>
-                                        )
-                                    }
-                                    return <span key={i} className="block mt-1">{line}</span>
-                                })}
+                            {/* Actions Bar */}
+                            <div className="px-3 py-2 flex justify-between text-gray-800">
+                                <div className="flex space-x-3">
+                                    <Heart size={20} className="hover:fill-red-500 hover:text-red-500 transition-colors" />
+                                    <MessageCircle size={20} />
+                                    <Share2 size={20} />
+                                </div>
+                                <Bookmark size={20} />
                             </div>
-                             <p className="text-[10px] text-gray-400 mt-2 uppercase tracking-wide">Ver todos os 342 comentários</p>
-                             <p className="text-[10px] text-gray-400 uppercase tracking-wide">HÁ 2 HORAS</p>
+
+                            {/* Caption Area */}
+                            <div className="px-3 pb-4">
+                                <p className="text-xs font-bold mb-1">2.492 curtidas</p>
+                                <div className="text-xs text-gray-800 space-y-1">
+                                    <span className="font-bold mr-1">sua_marca</span>
+                                    {generatedContent.split('\n').map((line, i) => {
+                                        if(line.trim() === '') return <br key={i}/>;
+                                        if(line.includes('#')) {
+                                            return <span key={i} className="text-blue-900 block mt-1">{line}</span>
+                                        }
+                                        return <span key={i} className="block mt-0.5">{line.replace(/\*\*/g, '')}</span>
+                                    })}
+                                </div>
+                                <p className="text-[9px] text-gray-400 mt-2 uppercase">Ver todos os comentários</p>
+                            </div>
                         </div>
                      </div>
                 )}
@@ -302,16 +278,12 @@ const Marketing: React.FC = () => {
             
             {generatedContent && (
                 <div className="flex justify-end gap-3 animate-fade-in">
-                     <button className="flex items-center space-x-2 px-6 py-3 bg-white/5 hover:bg-white/10 rounded-xl text-gray-300 font-medium transition-colors border border-white/5">
-                        <BarChart2 size={18} />
-                        <span>Ver Analytics Previsto</span>
-                    </button>
                     <button 
                         onClick={() => navigator.clipboard.writeText(generatedContent)}
                         className="flex items-center space-x-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-500 rounded-xl text-white font-bold transition-all shadow-lg shadow-indigo-900/40 hover:scale-105 active:scale-95"
                     >
                         <Copy size={18} />
-                        <span>Copiar Legenda</span>
+                        <span>Copiar Tudo</span>
                     </button>
                 </div>
             )}

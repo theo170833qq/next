@@ -6,12 +6,15 @@ import Finance from './pages/Finance';
 import Consultant from './pages/Consultant';
 import Settings from './pages/Settings';
 import Login from './pages/Login';
+import Onboarding from './pages/Onboarding';
 import { useAuth } from './context/AuthContext';
+import { useCompany } from './context/CompanyContext';
 import { Loader2 } from 'lucide-react';
 
 const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
   const { user, loading } = useAuth();
+  const { companyData } = useCompany();
 
   // Tela de Loading Inicial da Aplicação
   if (loading) {
@@ -31,6 +34,11 @@ const App: React.FC = () => {
   // Se não houver usuário, mostra Login
   if (!user) {
     return <Login />;
+  }
+
+  // Se houver usuário mas não houver dados da empresa, mostra Onboarding
+  if (!companyData) {
+    return <Onboarding />;
   }
 
   const renderContent = () => {

@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { LayoutGrid, TrendingUp, Sparkles, MessageSquareText, Settings, Wifi, WifiOff } from 'lucide-react';
 import { checkDatabaseConnection } from '../services/supabase';
+import { useCompany } from '../context/CompanyContext';
+import { useAuth } from '../context/AuthContext';
 
 interface SidebarProps {
   activeTab: string;
@@ -9,6 +11,8 @@ interface SidebarProps {
 
 const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => {
   const [isOnline, setIsOnline] = useState<boolean>(true);
+  const { companyData } = useCompany();
+  const { user } = useAuth();
 
   // Monitoramento automático de conexão
   useEffect(() => {
@@ -29,6 +33,8 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => {
     { id: 'marketing', label: 'Creator', icon: Sparkles },
     { id: 'consultant', label: 'Advisor', icon: MessageSquareText },
   ];
+  
+  const avatarSeed = companyData?.userName || user?.email || 'NextUser';
 
   return (
     <>
@@ -109,12 +115,16 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => {
           >
             <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-indigo-500 to-pink-500 p-[2px]">
               <div className="w-full h-full rounded-full bg-onyx-900 flex items-center justify-center overflow-hidden">
-                  <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=NextUser" alt="User" className="w-full h-full object-cover" />
+                  <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${avatarSeed}`} alt="User" className="w-full h-full object-cover" />
               </div>
             </div>
-            <div className="ml-3 text-left">
-              <p className={`text-base font-bold transition-colors ${activeTab === 'settings' ? 'text-indigo-300' : 'text-white group-hover:text-indigo-300'}`}>Usuário Pro</p>
-              <p className="text-xs text-gray-500 font-medium">Configurações</p>
+            <div className="ml-3 text-left overflow-hidden">
+              <p className={`text-base font-bold truncate transition-colors ${activeTab === 'settings' ? 'text-indigo-300' : 'text-white group-hover:text-indigo-300'}`}>
+                  {companyData?.userName || 'Usuário'}
+              </p>
+              <p className="text-xs text-gray-500 font-medium truncate">
+                  {companyData?.companyName || 'Configurações'}
+              </p>
             </div>
             <Settings size={20} className={`ml-auto text-gray-500 group-hover:rotate-90 transition-transform ${activeTab === 'settings' ? 'text-indigo-400 rotate-90' : ''}`} />
           </button>

@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { User, Bell, Shield, Key, Save, Loader2, LogOut, CreditCard, Mail, Server, Wifi, CheckCircle2, XCircle, RefreshCw } from 'lucide-react';
+import { User, Bell, Shield, Key, Save, Loader2, LogOut, CreditCard, Mail, Server, Wifi, CheckCircle2, XCircle, RefreshCw, Trash2 } from 'lucide-react';
 import { checkDatabaseConnection } from '../services/supabase';
 import { useAuth } from '../context/AuthContext';
+import { useCompany } from '../context/CompanyContext';
 
 const Settings: React.FC = () => {
-  const { signOut } = useAuth();
+  const { signOut, user } = useAuth();
+  const { companyData, clearCompanyData } = useCompany();
   const [loading, setLoading] = useState(false);
   const [activeSection, setActiveSection] = useState('profile');
   const [dbStatus, setDbStatus] = useState<'checking' | 'online' | 'offline'>('checking');
@@ -44,6 +46,13 @@ const Settings: React.FC = () => {
   const handleLogout = async () => {
     await signOut();
   };
+  
+  const handleResetData = () => {
+      if(confirm("Tem certeza? Isso apagará os dados da empresa (Faturamento, Nome, etc) e reiniciará o Onboarding.")){
+          clearCompanyData();
+          window.location.reload();
+      }
+  }
 
   const sections = [
     { id: 'profile', label: 'Perfil', icon: User },
@@ -52,6 +61,8 @@ const Settings: React.FC = () => {
     { id: 'api', label: 'Sistema & API', icon: Server },
     { id: 'billing', label: 'Assinatura', icon: CreditCard },
   ];
+
+  const avatarSeed = companyData?.userName || user?.email || 'NextUser';
 
   return (
     <div className="max-w-4xl mx-auto space-y-8 animate-slide-up pb-10">
@@ -70,10 +81,10 @@ const Settings: React.FC = () => {
               <div className="absolute inset-0 bg-gradient-to-b from-indigo-500/10 to-transparent pointer-events-none"></div>
               <div className="w-24 h-24 rounded-full bg-gradient-to-tr from-indigo-500 to-pink-500 p-[3px] mx-auto mb-4 relative z-10">
                   <div className="w-full h-full rounded-full bg-onyx-900 flex items-center justify-center overflow-hidden">
-                      <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=NextUser" alt="User" className="w-full h-full object-cover" />
+                      <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${avatarSeed}`} alt="User" className="w-full h-full object-cover" />
                   </div>
               </div>
-              <h3 className="text-xl font-bold text-white">Usuário Pro</h3>
+              <h3 className="text-xl font-bold text-white">{companyData?.userName || 'Usuário'}</h3>
               <p className="text-indigo-400 text-sm font-medium mb-4">Plano Enterprise</p>
               
               <div className="flex justify-center gap-2">
@@ -119,19 +130,36 @@ const Settings: React.FC = () => {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="space-y-2">
                             <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Nome Completo</label>
-                            <input type="text" defaultValue="Carlos Silva" className="w-full bg-onyx-900 border border-white/10 rounded-xl p-3 text-white focus:ring-1 focus:ring-indigo-500 outline-none transition-all" />
+                            <input type="text" defaultValue={companyData?.userName} className="w-full bg-onyx-900 border border-white/10 rounded-xl p-3 text-white focus:ring-1 focus:ring-indigo-500 outline-none transition-all" />
                         </div>
                         <div className="space-y-2">
-                            <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Cargo</label>
-                            <input type="text" defaultValue="CEO & Founder" className="w-full bg-onyx-900 border border-white/10 rounded-xl p-3 text-white focus:ring-1 focus:ring-indigo-500 outline-none transition-all" />
+                            <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Empresa</label>
+                            <input type="text" defaultValue={companyData?.companyName} className="w-full bg-onyx-900 border border-white/10 rounded-xl p-3 text-white focus:ring-1 focus:ring-indigo-500 outline-none transition-all" />
                         </div>
                         <div className="space-y-2 md:col-span-2">
                             <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Email Corporativo</label>
                             <div className="relative">
                                 <Mail className="absolute left-3 top-3.5 text-gray-500" size={18} />
-                                <input type="email" defaultValue="carlos.silva@nextintelligence.com" className="w-full bg-onyx-900 border border-white/10 rounded-xl pl-10 pr-3 py-3 text-white focus:ring-1 focus:ring-indigo-500 outline-none transition-all" />
+                                <input 
+                                    type="email" 
+                                    defaultValue={user?.email || ''} 
+                                    disabled
+                                    className="w-full bg-onyx-900/50 border border-white/10 rounded-xl pl-10 pr-3 py-3 text-gray-400 cursor-not-allowed outline-none" 
+                                />
                             </div>
+                            <p className="text-[10px] text-gray-500">Para alterar seu email, entre em contato com o suporte.</p>
                         </div>
+                    </div>
+
+                    <div className="mt-8 pt-8 border-t border-white/5">
+                        <h4 className="text-sm font-bold text-gray-400 mb-4">Zona de Perigo</h4>
+                        <button 
+                            onClick={handleResetData}
+                            className="flex items-center text-red-400 hover:text-red-300 text-sm font-bold"
+                        >
+                            <Trash2 size={16} className="mr-2" />
+                            Resetar Dados da Empresa (Voltar ao Onboarding)
+                        </button>
                     </div>
                 </div>
             )}

@@ -1,18 +1,16 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { getStrategicAdvice } from '../services/gemini';
-import { Send, User, Bot, Sparkles, MoreHorizontal, Paperclip, Activity, Zap, Target, BrainCircuit, BarChart3 } from 'lucide-react';
+import { Send, User, Bot, Sparkles, Target, Activity, BrainCircuit, BarChart3, Briefcase } from 'lucide-react';
 import { ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, Tooltip } from 'recharts';
 
 const Consultant: React.FC = () => {
   const [messages, setMessages] = useState<{role: 'user' | 'model', text: string}[]>([
-    { role: 'model', text: 'Olá. Sou seu estrategista de IA. Vamos analisar os gargalos da sua empresa e criar um plano de ação. Por onde quer começar?' }
+    { role: 'model', text: 'Olá, CEO. Sou seu Advisor Executivo. Estou conectado aos dados de mercado. Posso ajudar a reavaliar seu Pricing, analisar riscos de expansão ou auditar sua eficiência operacional. Qual o foco de hoje?' }
   ]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Mock data for the "Live Analysis" visualization
-  // In a real app, this would be dynamic based on the conversation text
   const [analysisData, setAnalysisData] = useState([
     { subject: 'Vendas', A: 80, fullMark: 150 },
     { subject: 'Marketing', A: 90, fullMark: 150 },
@@ -36,7 +34,6 @@ const Consultant: React.FC = () => {
     setMessages(prev => [...prev, { role: 'user', text: userMsg }]);
     setLoading(true);
 
-    // Simulate "Analyzing" visual effect by randomizing chart data slightly
     const interval = setInterval(() => {
         setAnalysisData(prev => prev.map(item => ({
             ...item,
@@ -58,6 +55,20 @@ const Consultant: React.FC = () => {
     }
   };
 
+  const handleExportPlan = () => {
+    if(messages.length <= 1) return;
+
+    const content = messages.map(m => `[${m.role === 'model' ? 'ADVISOR AI' : 'VOCÊ'}]:\n${m.text}\n-------------------`).join('\n\n');
+    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `Plano_Estrategico_${new Date().toISOString().split('T')[0]}.txt`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
         e.preventDefault();
@@ -66,10 +77,10 @@ const Consultant: React.FC = () => {
   }
 
   const suggestionChips = [
-      "Como aumentar meu LTV?",
-      "Estratégia para B2B",
-      "Reduzir custos operacionais",
-      "Escalar vendas online"
+      "Auditoria de Pricing (SaaS)",
+      "Estratégia de Retenção de Clientes",
+      "Análise de Risco: Expansão Internacional",
+      "Otimização de Cash Burn"
   ];
 
   return (
@@ -85,15 +96,15 @@ const Consultant: React.FC = () => {
                     </div>
                     <div className="ml-3">
                         <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                            Advisor AI 
-                            <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">V2.5</span>
+                            Advisor Board AI
                         </h2>
                         <div className="flex items-center">
                             <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full mr-2 animate-pulse"></span>
-                            <p className="text-xs text-gray-400 font-medium">Sistema Operacional</p>
+                            <p className="text-xs text-gray-400 font-medium">Modo Estratégico Ativo</p>
                         </div>
                     </div>
                 </div>
+                <Briefcase className="text-gray-500 opacity-50" />
             </div>
 
             {/* Messages Area */}
@@ -141,7 +152,7 @@ const Consultant: React.FC = () => {
                                     <Sparkles size={14} className="text-white" />
                                 </div>
                                 <div className="bg-white/5 border border-white/5 rounded-2xl rounded-bl-none p-4 flex items-center space-x-3">
-                                    <span className="text-xs text-indigo-300 font-medium">Analisando estratégia...</span>
+                                    <span className="text-xs text-indigo-300 font-medium">Processando cenário complexo...</span>
                                     <div className="flex space-x-1">
                                         <div className="w-1.5 h-1.5 bg-indigo-400 rounded-full animate-bounce"></div>
                                         <div className="w-1.5 h-1.5 bg-indigo-400 rounded-full animate-bounce delay-75"></div>
@@ -177,7 +188,7 @@ const Consultant: React.FC = () => {
                                 value={input}
                                 onChange={(e) => setInput(e.target.value)}
                                 onKeyDown={handleKeyDown}
-                                placeholder="Descreva um desafio do seu negócio..."
+                                placeholder="Ex: Analise meus custos fixos versus projeção de receita..."
                                 className="relative w-full bg-onyx-950 border border-white/10 rounded-2xl pl-5 pr-4 py-4 text-white placeholder-gray-500 focus:ring-1 focus:ring-indigo-500/50 outline-none transition-all shadow-inner"
                             />
                         </div>
@@ -201,9 +212,9 @@ const Consultant: React.FC = () => {
                 <div className="flex items-center justify-between mb-2">
                      <h3 className="text-sm font-bold text-white flex items-center gap-2">
                         <Target size={16} className="text-pink-500" />
-                        Radar de Impacto
+                        Radar de Performance
                      </h3>
-                     <span className="text-[10px] text-gray-500 uppercase tracking-widest">Tempo Real</span>
+                     <span className="text-[10px] text-gray-500 uppercase tracking-widest">Live</span>
                 </div>
                 <div className="h-64 w-full relative z-10 -ml-4">
                     <ResponsiveContainer width="100%" height="100%">
@@ -226,46 +237,33 @@ const Consultant: React.FC = () => {
                         </RadarChart>
                     </ResponsiveContainer>
                 </div>
-                <p className="text-xs text-center text-gray-500 -mt-4">
-                    Visualização das áreas afetadas pela estratégia atual.
-                </p>
             </div>
 
             {/* Metrics & Context */}
             <div className="glass-card rounded-3xl p-6 border border-white/5 space-y-4">
                  <h3 className="text-sm font-bold text-white flex items-center gap-2 mb-4">
                     <Activity size={16} className="text-emerald-500" />
-                    Telemetria da Sessão
+                    Diagnóstico em Tempo Real
                  </h3>
 
                  <div className="space-y-4">
                     <div>
                         <div className="flex justify-between text-xs mb-1">
-                            <span className="text-gray-400">Clareza do Objetivo</span>
-                            <span className="text-emerald-400 font-bold">94%</span>
+                            <span className="text-gray-400">Clareza Estratégica</span>
+                            <span className="text-emerald-400 font-bold">98%</span>
                         </div>
                         <div className="h-1.5 w-full bg-gray-800 rounded-full overflow-hidden">
-                            <div className="h-full bg-emerald-500 rounded-full" style={{width: '94%'}}></div>
+                            <div className="h-full bg-emerald-500 rounded-full" style={{width: '98%'}}></div>
                         </div>
                     </div>
 
                     <div>
                         <div className="flex justify-between text-xs mb-1">
-                            <span className="text-gray-400">Risco Estimado</span>
-                            <span className="text-yellow-400 font-bold">Baixo</span>
+                            <span className="text-gray-400">Risco de Execução</span>
+                            <span className="text-yellow-400 font-bold">Moderado</span>
                         </div>
                         <div className="h-1.5 w-full bg-gray-800 rounded-full overflow-hidden">
-                            <div className="h-full bg-yellow-500 rounded-full" style={{width: '25%'}}></div>
-                        </div>
-                    </div>
-
-                     <div>
-                        <div className="flex justify-between text-xs mb-1">
-                            <span className="text-gray-400">Potencial de ROI</span>
-                            <span className="text-indigo-400 font-bold">Alto</span>
-                        </div>
-                        <div className="h-1.5 w-full bg-gray-800 rounded-full overflow-hidden">
-                            <div className="h-full bg-indigo-500 rounded-full" style={{width: '85%'}}></div>
+                            <div className="h-full bg-yellow-500 rounded-full" style={{width: '45%'}}></div>
                         </div>
                     </div>
                  </div>
@@ -277,14 +275,18 @@ const Consultant: React.FC = () => {
                  
                  <BrainCircuit size={32} className="text-white mb-4" />
                  <h3 className="text-lg font-bold text-white leading-tight mb-2">
-                    Insights Profundos
+                    Insights Gerados
                  </h3>
                  <p className="text-xs text-gray-400 leading-relaxed mb-4">
-                    A IA está cruzando dados do seu setor para identificar oportunidades ocultas de receita.
+                    Baseado no contexto da conversa, recomendamos focar na redução do CAC antes de escalar o time de vendas.
                  </p>
-                 <button className="w-full py-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-bold text-white transition-colors flex items-center justify-center gap-2">
+                 <button 
+                    onClick={handleExportPlan}
+                    disabled={messages.length <= 1}
+                    className="w-full py-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-bold text-white transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+                 >
                     <BarChart3 size={14} />
-                    Gerar Relatório PDF
+                    Exportar Plano de Ação
                  </button>
             </div>
 

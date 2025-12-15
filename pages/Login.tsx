@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { supabase, checkDatabaseConnection } from '../services/supabase';
-import { Mail, Lock, Loader2, ArrowRight, ShieldCheck, Sparkles, AlertCircle, Wifi } from 'lucide-react';
+import { Mail, Lock, Loader2, ArrowRight, ShieldCheck, Sparkles, AlertCircle, Wifi, BarChart3, Globe, Zap } from 'lucide-react';
 
 const Login: React.FC = () => {
   const [isSignUp, setIsSignUp] = useState(false);
@@ -44,146 +44,211 @@ const Login: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden font-sans">
-      {/* Background Ambience */}
-      <div className="fixed inset-0 bg-onyx-950 z-[-1]"></div>
-      <div className="absolute top-[-20%] right-[-10%] w-[800px] h-[800px] bg-indigo-600/20 rounded-full blur-[120px] animate-pulse" />
-      <div className="absolute bottom-[-20%] left-[-10%] w-[600px] h-[600px] bg-pink-600/10 rounded-full blur-[100px]" />
+    <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden font-sans bg-[#020408]">
+      
+      {/* --- Dynamic Background --- */}
+      <div className="absolute inset-0 z-0">
+          {/* Grid Pattern */}
+          <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 brightness-100 contrast-150 mix-blend-overlay"></div>
+          <div className="absolute inset-0 opacity-20" style={{ backgroundImage: 'linear-gradient(#333 1px, transparent 1px), linear-gradient(90deg, #333 1px, transparent 1px)', backgroundSize: '40px 40px' }}></div>
+          
+          {/* Animated Orbs */}
+          <div className="absolute top-[-10%] left-[20%] w-[500px] h-[500px] bg-indigo-600/30 rounded-full blur-[120px] animate-pulse" style={{ animationDuration: '8s' }}></div>
+          <div className="absolute bottom-[-10%] right-[10%] w-[600px] h-[600px] bg-fuchsia-600/20 rounded-full blur-[128px] animate-float"></div>
+          <div className="absolute top-[40%] left-[-10%] w-[400px] h-[400px] bg-cyan-500/10 rounded-full blur-[100px]"></div>
+      </div>
 
-      {/* System Status Badge (Top Right) */}
-      <div className="absolute top-4 right-4 md:top-8 md:right-8 z-50">
-          <div className={`flex items-center space-x-2 px-4 py-2 rounded-full border backdrop-blur-md ${dbStatus === 'online' ? 'bg-emerald-500/10 border-emerald-500/20' : 'bg-red-500/10 border-red-500/20'}`}>
-              <div className={`w-2 h-2 rounded-full ${dbStatus === 'online' ? 'bg-emerald-500 animate-pulse' : dbStatus === 'checking' ? 'bg-yellow-500 animate-bounce' : 'bg-red-500'}`}></div>
-              <span className={`text-xs font-bold ${dbStatus === 'online' ? 'text-emerald-400' : 'text-gray-400'}`}>
-                  {dbStatus === 'online' ? 'Banco de Dados Conectado' : dbStatus === 'checking' ? 'Conectando...' : 'Erro de Conexão'}
+      {/* --- System Status (Floating Pill) --- */}
+      <div className="absolute top-6 right-6 z-50 animate-fade-in">
+          <div className={`flex items-center gap-2 px-4 py-2 rounded-full border backdrop-blur-xl transition-all duration-500 ${dbStatus === 'online' ? 'bg-emerald-500/5 border-emerald-500/20 shadow-[0_0_15px_rgba(16,185,129,0.1)]' : 'bg-red-500/5 border-red-500/20'}`}>
+              <div className="relative">
+                 <div className={`w-2 h-2 rounded-full ${dbStatus === 'online' ? 'bg-emerald-400' : 'bg-red-400'}`}></div>
+                 {dbStatus === 'online' && <div className="absolute inset-0 w-2 h-2 bg-emerald-400 rounded-full animate-ping opacity-75"></div>}
+              </div>
+              <span className={`text-[10px] font-bold uppercase tracking-widest ${dbStatus === 'online' ? 'text-emerald-400' : 'text-red-400'}`}>
+                  {dbStatus === 'online' ? 'Systems Online' : 'Connecting...'}
               </span>
-              {dbStatus === 'online' && <Wifi size={14} className="text-emerald-500 ml-2" />}
           </div>
       </div>
 
-      <div className="w-full max-w-5xl grid grid-cols-1 md:grid-cols-2 gap-8 glass-card rounded-3xl border border-white/10 overflow-hidden shadow-2xl animate-slide-up">
+      {/* --- Main Card --- */}
+      <div className="w-full max-w-[1100px] min-h-[600px] grid grid-cols-1 md:grid-cols-2 gap-0 bg-onyx-900/40 backdrop-blur-2xl rounded-[2.5rem] border border-white/10 shadow-[0_0_50px_rgba(0,0,0,0.5)] overflow-hidden relative z-10 animate-slide-up group">
         
-        {/* Left Side: Branding */}
-        <div className="hidden md:flex flex-col justify-between p-12 bg-gradient-to-br from-indigo-900/50 to-onyx-900/50 relative">
-          <div className="relative z-10">
-            <div className="flex items-center space-x-3 mb-8">
-               <div className="relative w-10 h-10">
-                  <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
-                      <path d="M8 32V8L20 20L8 32Z" fill="#6366F1" />
-                      <path d="M20 20V8L32 20V32L20 20Z" fill="#F43F5E" />
-                  </svg>
+        {/* Glow Effects inside card */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-1 bg-gradient-to-r from-transparent via-indigo-500 to-transparent opacity-50"></div>
+
+        {/* --- Left Side: Brand Experience --- */}
+        <div className="hidden md:flex flex-col justify-between p-12 lg:p-16 relative overflow-hidden">
+          {/* Decorative Gradient Overlay */}
+          <div className="absolute inset-0 bg-gradient-to-br from-indigo-600/20 via-purple-900/10 to-onyx-950/80 z-0"></div>
+          
+          {/* Content */}
+          <div className="relative z-10 flex flex-col h-full justify-between">
+            <div>
+                <div className="flex items-center gap-3 mb-8">
+                    <div className="w-10 h-10 bg-gradient-to-tr from-white to-gray-400 rounded-xl flex items-center justify-center shadow-lg">
+                        <svg viewBox="0 0 24 24" fill="none" className="w-6 h-6 text-onyx-950" stroke="currentColor" strokeWidth="3">
+                            <path d="M12 2L2 7L12 12L22 7L12 2Z" />
+                            <path d="M2 17L12 22L22 17" />
+                            <path d="M2 12L12 17L22 12" />
+                        </svg>
+                    </div>
+                    <span className="font-display font-bold text-2xl text-white tracking-tight">NEXT.AI</span>
+                </div>
+
+                <h1 className="text-4xl lg:text-5xl font-display font-bold text-white leading-[1.1] mb-6">
+                  Inteligência <br/>
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400">que escala</span> <br/>
+                  seu negócio.
+                </h1>
+                <p className="text-gray-400 text-lg font-light leading-relaxed max-w-sm">
+                  Dashboards financeiros, marketing generativo e consultoria executiva em uma única plataforma.
+                </p>
+            </div>
+
+            {/* Floating Live Insight Card */}
+            <div className="relative mt-8">
+                 <div className="absolute -inset-0.5 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-2xl opacity-30 blur"></div>
+                 <div className="relative bg-onyx-900/90 border border-white/10 p-5 rounded-2xl shadow-xl backdrop-blur-md">
+                     <div className="flex items-center justify-between mb-3">
+                         <div className="flex items-center gap-2">
+                             <div className="p-1.5 bg-indigo-500/20 rounded-lg">
+                                 <Sparkles size={14} className="text-indigo-400" />
+                             </div>
+                             <span className="text-xs font-bold text-indigo-200">Insight Gerado Agora</span>
+                         </div>
+                         <span className="text-[10px] text-gray-500">12s atrás</span>
+                     </div>
+                     <p className="text-sm text-gray-300 font-medium leading-relaxed">
+                        "Sua margem aumentou <span className="text-emerald-400 font-bold">+12%</span> após a otimização de custos fixos sugerida pela IA."
+                     </p>
+                 </div>
+                 
+                 {/* Decorative background elements behind card */}
+                 <div className="absolute -z-10 top-[-20px] right-[-20px] w-24 h-24 bg-indigo-500/20 rounded-full blur-2xl"></div>
+            </div>
+
+            <div className="flex items-center gap-6 mt-8">
+               <div className="flex -space-x-3">
+                   {[1,2,3].map(i => (
+                       <div key={i} className="w-8 h-8 rounded-full border-2 border-onyx-900 bg-gray-700 overflow-hidden">
+                           <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${i*34}`} alt="User" />
+                       </div>
+                   ))}
                </div>
-               <span className="font-display font-bold text-2xl text-white tracking-tighter">NEXT</span>
+               <div className="text-xs text-gray-400 font-medium">
+                   Junte-se a <span className="text-white font-bold">2.400+</span> líderes.
+               </div>
             </div>
-            
-            <h2 className="text-4xl font-display font-bold text-white leading-tight mb-6">
-              Inteligência Artificial para <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-pink-400">negócios do futuro.</span>
-            </h2>
-            <p className="text-indigo-200 text-lg leading-relaxed font-light">
-              Tenha acesso a dashboards financeiros, consultoria estratégica via IA e criação de conteúdo em uma única plataforma enterprise.
-            </p>
-          </div>
-
-          <div className="relative z-10 space-y-4">
-             <div className="flex items-center text-sm text-gray-400">
-                <ShieldCheck className="mr-2 text-emerald-400" size={18} />
-                <span>Dados criptografados de ponta a ponta</span>
-             </div>
-             <div className="flex items-center text-sm text-gray-400">
-                <Sparkles className="mr-2 text-yellow-400" size={18} />
-                <span>Powered by Gemini 2.5 Flash</span>
-             </div>
           </div>
         </div>
 
-        {/* Right Side: Form */}
-        <div className="p-8 md:p-12 flex flex-col justify-center bg-onyx-900/80 backdrop-blur-sm">
-          <div className="mb-8 text-center md:text-left">
-            <h3 className="text-2xl font-display font-bold text-white mb-2">
-              {isSignUp ? "Crie sua conta corporativa" : "Bem-vindo de volta"}
-            </h3>
-            <p className="text-gray-400 text-sm">
-              {isSignUp ? "Junte-se a milhares de empreendedores inovadores." : "Acesse seu painel de controle e insights."}
-            </p>
-          </div>
+        {/* --- Right Side: Login Form --- */}
+        <div className="p-8 md:p-16 flex flex-col justify-center bg-black/20 relative">
+            <div className="max-w-md mx-auto w-full">
+                
+                <div className="mb-8">
+                    <h2 className="text-2xl font-bold text-white mb-2">
+                        {isSignUp ? "Criar conta" : "Login"}
+                    </h2>
+                    <p className="text-gray-400 text-sm">
+                        {isSignUp ? "Comece seu teste gratuito de 14 dias." : "Bem-vindo de volta ao cockpit."}
+                    </p>
+                </div>
 
-          <form onSubmit={handleAuth} className="space-y-5">
-            <div className="space-y-2">
-              <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Email Corporativo</label>
-              <div className="relative group">
-                <Mail className="absolute left-4 top-3.5 text-gray-500 group-focus-within:text-indigo-400 transition-colors" size={20} />
-                <input 
-                  type="email" 
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  placeholder="nome@empresa.com"
-                  className="w-full bg-black/40 border border-white/10 rounded-xl pl-12 pr-4 py-3 text-white placeholder-gray-600 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 outline-none transition-all"
-                />
-              </div>
+                <form onSubmit={handleAuth} className="space-y-5">
+                    
+                    <div className="space-y-1.5">
+                        <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider ml-1">Email Corporativo</label>
+                        <div className="relative group">
+                            <div className="absolute inset-0 bg-indigo-500/20 rounded-xl blur opacity-0 group-focus-within:opacity-100 transition-opacity duration-500"></div>
+                            <div className="relative bg-white/5 border border-white/10 rounded-xl flex items-center transition-colors group-focus-within:border-indigo-500/50 group-focus-within:bg-white/10">
+                                <Mail className="ml-4 text-gray-500 group-focus-within:text-indigo-400 transition-colors" size={18} />
+                                <input 
+                                    type="email" 
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
+                                    required
+                                    placeholder="voce@empresa.com"
+                                    className="w-full bg-transparent border-none p-4 text-white placeholder-gray-600 focus:ring-0 outline-none text-sm"
+                                />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="space-y-1.5">
+                        <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider ml-1">Senha</label>
+                        <div className="relative group">
+                            <div className="absolute inset-0 bg-indigo-500/20 rounded-xl blur opacity-0 group-focus-within:opacity-100 transition-opacity duration-500"></div>
+                             <div className="relative bg-white/5 border border-white/10 rounded-xl flex items-center transition-colors group-focus-within:border-indigo-500/50 group-focus-within:bg-white/10">
+                                <Lock className="ml-4 text-gray-500 group-focus-within:text-indigo-400 transition-colors" size={18} />
+                                <input 
+                                    type="password" 
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    required
+                                    placeholder="••••••••"
+                                    className="w-full bg-transparent border-none p-4 text-white placeholder-gray-600 focus:ring-0 outline-none text-sm"
+                                />
+                            </div>
+                        </div>
+                    </div>
+
+                    {error && (
+                        <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg flex items-center gap-3 animate-fade-in">
+                            <AlertCircle className="text-red-400 shrink-0" size={16} />
+                            <p className="text-red-200 text-xs font-medium">{error}</p>
+                        </div>
+                    )}
+                    
+                    {message && (
+                        <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-lg flex items-center gap-3 animate-fade-in">
+                            <ShieldCheck className="text-emerald-400 shrink-0" size={16} />
+                            <p className="text-emerald-200 text-xs font-medium">{message}</p>
+                        </div>
+                    )}
+
+                    <button 
+                        type="submit"
+                        disabled={loading}
+                        className="w-full relative group overflow-hidden bg-white text-onyx-950 font-bold py-4 rounded-xl transition-all shadow-[0_0_20px_rgba(255,255,255,0.1)] flex items-center justify-center disabled:opacity-70 disabled:cursor-not-allowed mt-4"
+                    >
+                        <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                        <span className="relative z-10 flex items-center group-hover:text-white transition-colors duration-300">
+                             {loading ? <Loader2 className="animate-spin mr-2" size={18} /> : null}
+                             {isSignUp ? "Criar Conta" : "Acessar Plataforma"}
+                             {!loading && <ArrowRight className="ml-2 group-hover:translate-x-1 transition-transform" size={18} />}
+                        </span>
+                    </button>
+                </form>
+
+                <div className="mt-8 text-center">
+                    <button 
+                        onClick={() => {
+                            setIsSignUp(!isSignUp);
+                            setError(null);
+                            setMessage(null);
+                        }}
+                        className="text-xs text-gray-500 hover:text-white transition-colors"
+                    >
+                        {isSignUp ? "Já possui uma conta?" : "Ainda não tem acesso?"} <span className="text-indigo-400 font-bold ml-1">{isSignUp ? "Fazer Login" : "Cadastre-se"}</span>
+                    </button>
+                </div>
+                
+                {/* Footer decorations */}
+                <div className="mt-12 flex justify-center gap-4 opacity-30 grayscale hover:grayscale-0 transition-all duration-500">
+                     <Globe size={16} />
+                     <ShieldCheck size={16} />
+                     <Zap size={16} />
+                </div>
             </div>
-
-            <div className="space-y-2">
-              <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Senha</label>
-              <div className="relative group">
-                <Lock className="absolute left-4 top-3.5 text-gray-500 group-focus-within:text-indigo-400 transition-colors" size={20} />
-                <input 
-                  type="password" 
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  placeholder="••••••••"
-                  className="w-full bg-black/40 border border-white/10 rounded-xl pl-12 pr-4 py-3 text-white placeholder-gray-600 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 outline-none transition-all"
-                />
-              </div>
-            </div>
-
-            {error && (
-              <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl flex items-start">
-                <AlertCircle className="text-red-400 mr-2 mt-0.5" size={16} />
-                <p className="text-red-300 text-sm">{error}</p>
-              </div>
-            )}
-            
-            {message && (
-              <div className="p-3 bg-green-500/10 border border-green-500/20 rounded-xl flex items-start">
-                 <ShieldCheck className="text-green-400 mr-2 mt-0.5" size={16} />
-                 <p className="text-green-300 text-sm">{message}</p>
-              </div>
-            )}
-
-            <button 
-              type="submit"
-              disabled={loading}
-              className="w-full bg-white hover:bg-gray-200 text-onyx-950 font-bold py-3.5 rounded-xl transition-all shadow-[0_0_20px_rgba(255,255,255,0.1)] flex items-center justify-center group disabled:opacity-70 disabled:cursor-not-allowed"
-            >
-              {loading ? (
-                <Loader2 className="animate-spin" size={20} />
-              ) : (
-                <>
-                  {isSignUp ? "Criar Conta Gratuita" : "Acessar Plataforma"}
-                  <ArrowRight className="ml-2 group-hover:translate-x-1 transition-transform" size={18} />
-                </>
-              )}
-            </button>
-          </form>
-
-          <div className="mt-8 pt-6 border-t border-white/5 text-center">
-            <p className="text-gray-400 text-sm">
-              {isSignUp ? "Já tem uma conta?" : "Ainda não tem acesso?"}
-              <button 
-                onClick={() => {
-                  setIsSignUp(!isSignUp);
-                  setError(null);
-                  setMessage(null);
-                }}
-                className="ml-2 text-indigo-400 hover:text-indigo-300 font-bold transition-colors"
-              >
-                {isSignUp ? "Fazer Login" : "Criar conta"}
-              </button>
-            </p>
-          </div>
         </div>
+
+      </div>
+      
+      {/* Footer Text */}
+      <div className="absolute bottom-4 left-0 w-full text-center text-[10px] text-gray-600">
+         &copy; 2024 Next Intelligence. Powered by Google Gemini.
       </div>
     </div>
   );
