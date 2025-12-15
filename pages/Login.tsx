@@ -44,7 +44,7 @@ const Login: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
+    <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden font-sans">
       {/* Background Ambience */}
       <div className="fixed inset-0 bg-onyx-950 z-[-1]"></div>
       <div className="absolute top-[-20%] right-[-10%] w-[800px] h-[800px] bg-indigo-600/20 rounded-full blur-[120px] animate-pulse" />
@@ -73,13 +73,13 @@ const Login: React.FC = () => {
                       <path d="M20 20V8L32 20V32L20 20Z" fill="#F43F5E" />
                   </svg>
                </div>
-               <span className="font-extrabold text-2xl text-white tracking-tighter">NEXT</span>
+               <span className="font-display font-bold text-2xl text-white tracking-tighter">NEXT</span>
             </div>
             
-            <h2 className="text-4xl font-extrabold text-white leading-tight mb-6">
+            <h2 className="text-4xl font-display font-bold text-white leading-tight mb-6">
               Inteligência Artificial para <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-pink-400">negócios do futuro.</span>
             </h2>
-            <p className="text-indigo-200 text-lg leading-relaxed">
+            <p className="text-indigo-200 text-lg leading-relaxed font-light">
               Tenha acesso a dashboards financeiros, consultoria estratégica via IA e criação de conteúdo em uma única plataforma enterprise.
             </p>
           </div>
@@ -99,7 +99,7 @@ const Login: React.FC = () => {
         {/* Right Side: Form */}
         <div className="p-8 md:p-12 flex flex-col justify-center bg-onyx-900/80 backdrop-blur-sm">
           <div className="mb-8 text-center md:text-left">
-            <h3 className="text-2xl font-bold text-white mb-2">
+            <h3 className="text-2xl font-display font-bold text-white mb-2">
               {isSignUp ? "Crie sua conta corporativa" : "Bem-vindo de volta"}
             </h3>
             <p className="text-gray-400 text-sm">
