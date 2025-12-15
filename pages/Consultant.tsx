@@ -1,10 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { getStrategicAdvice } from '../services/gemini';
-import { Send, User, Bot, Sparkles, Target, Activity, BrainCircuit, BarChart3, Briefcase } from 'lucide-react';
+import { Send, User, Bot, Sparkles, Target, Activity, BrainCircuit, BarChart3, Briefcase, AlertTriangle } from 'lucide-react';
 import { ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, Tooltip } from 'recharts';
 
 const Consultant: React.FC = () => {
-  const [messages, setMessages] = useState<{role: 'user' | 'model', text: string}[]>([
+  const [messages, setMessages] = useState<{role: 'user' | 'model', text: string, isError?: boolean}[]>([
     { role: 'model', text: 'Olá, CEO. Sou seu Advisor Executivo. Estou conectado aos dados de mercado. Posso ajudar a reavaliar seu Pricing, analisar riscos de expansão ou auditar sua eficiência operacional. Qual o foco de hoje?' }
   ]);
   const [input, setInput] = useState('');
@@ -34,6 +34,7 @@ const Consultant: React.FC = () => {
     setMessages(prev => [...prev, { role: 'user', text: userMsg }]);
     setLoading(true);
 
+    // Simulação visual de análise enquanto carrega
     const interval = setInterval(() => {
         setAnalysisData(prev => prev.map(item => ({
             ...item,
@@ -46,10 +47,18 @@ const Consultant: React.FC = () => {
         const response = await getStrategicAdvice(userMsg, history);
         
         clearInterval(interval);
-        setMessages(prev => [...prev, { role: 'model', text: response }]);
+        
+        // Verifica se a resposta parece um erro vindo do serviço
+        const isError = response.startsWith('⛔') || response.startsWith('⚠️');
+        setMessages(prev => [...prev, { role: 'model', text: response, isError }]);
+        
     } catch (error) {
         clearInterval(interval);
-        setMessages(prev => [...prev, { role: 'model', text: "Desculpe, tive um problema de conexão. Verifique sua chave API." }]);
+        setMessages(prev => [...prev, { 
+            role: 'model', 
+            text: "Falha crítica ao conectar com o serviço de IA. Por favor, verifique sua conexão e a chave de API.", 
+            isError: true 
+        }]);
     } finally {
         setLoading(false);
     }
@@ -116,14 +125,20 @@ const Consultant: React.FC = () => {
                         <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} group animate-fade-in`}>
                             <div className={`flex max-w-[90%] md:max-w-[75%] items-end ${msg.role === 'user' ? 'flex-row-reverse' : 'flex-row'}`}>
                                 
-                                <div className={`flex-shrink-0 h-8 w-8 rounded-full flex items-center justify-center mb-1 shadow-md ${msg.role === 'user' ? 'bg-white/10 ml-3' : 'bg-indigo-600 mr-3'}`}>
-                                    {msg.role === 'user' ? <User size={14} className="text-white" /> : <Sparkles size={14} className="text-white" />}
+                                <div className={`flex-shrink-0 h-8 w-8 rounded-full flex items-center justify-center mb-1 shadow-md ${
+                                    msg.role === 'user' ? 'bg-white/10 ml-3' : 
+                                    msg.isError ? 'bg-red-500/20 mr-3 border border-red-500/50' : 'bg-indigo-600 mr-3'
+                                }`}>
+                                    {msg.role === 'user' ? <User size={14} className="text-white" /> : 
+                                     msg.isError ? <AlertTriangle size={14} className="text-red-400" /> : <Sparkles size={14} className="text-white" />}
                                 </div>
                                 
                                 <div className={`p-4 rounded-2xl text-sm leading-relaxed shadow-lg backdrop-blur-md border ${
                                     msg.role === 'user' 
                                     ? 'bg-gradient-to-br from-indigo-600/80 to-indigo-800/80 text-white rounded-br-none border-indigo-500/30' 
-                                    : 'bg-white/5 text-gray-100 rounded-bl-none border-white/5'
+                                    : msg.isError 
+                                        ? 'bg-red-900/20 text-red-100 border-red-500/30 rounded-bl-none'
+                                        : 'bg-white/5 text-gray-100 rounded-bl-none border-white/5'
                                 }`}>
                                     <div className="whitespace-pre-wrap font-sans text-[14px] md:text-[15px]">
                                         {msg.text.split('\n').map((line, i) => {
@@ -132,7 +147,7 @@ const Consultant: React.FC = () => {
                                                 <p key={i} className="mb-2 last:mb-0">
                                                     {parts.map((part, j) => {
                                                         if (part.startsWith('**') && part.endsWith('**')) {
-                                                            return <strong key={j} className="font-bold text-white shadow-purple-500/20 drop-shadow-sm">{part.replace(/\*\*/g, '')}</strong>;
+                                                            return <strong key={j} className="font-bold shadow-purple-500/20 drop-shadow-sm">{part.replace(/\*\*/g, '')}</strong>;
                                                         }
                                                         return part;
                                                     })}
