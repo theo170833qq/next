@@ -22,7 +22,7 @@ const App: React.FC = () => {
   const { companyData } = useCompany();
 
   // Timestamp de Build para verificar atualização
-  const BUILD_VERSION = "v1.2 (Hardcoded Key Fix)";
+  const BUILD_VERSION = "v1.3 (Enterprise Login)";
 
   // Tela de Loading Inicial da Aplicação
   if (loading) {
