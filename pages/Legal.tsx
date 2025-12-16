@@ -1,8 +1,12 @@
 import React, { useState } from 'react';
 import { generateLegalDoc } from '../services/gemini';
-import { Scale, FileText, Shield, Copy, Loader2, Feather, Stamp } from 'lucide-react';
+import { Scale, FileText, Shield, Copy, Loader2, Feather, Stamp, Settings, ShieldAlert } from 'lucide-react';
 
-const Legal: React.FC = () => {
+interface LegalProps {
+  onNavigate?: (tab: string) => void;
+}
+
+const Legal: React.FC<LegalProps> = ({ onNavigate }) => {
   const [docType, setDocType] = useState('NDA');
   const [parties, setParties] = useState('');
   const [details, setDetails] = useState('');
@@ -104,7 +108,7 @@ const Legal: React.FC = () => {
                  
                  <div className="p-6 flex justify-between items-center border-b border-white/5 bg-onyx-900/50">
                      <h3 className="font-serif italic text-xl text-slate-300">Minuta do Documento</h3>
-                     {result && (
+                     {result && result !== 'API_KEY_MISSING' && (
                         <button onClick={() => navigator.clipboard.writeText(result)} className="text-xs flex items-center gap-2 bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-lg transition-colors text-white">
                             <Copy size={14} /> Copiar Texto
                         </button>
@@ -132,7 +136,24 @@ const Legal: React.FC = () => {
                         </div>
                     )}
 
-                    {result && (
+                    {result === 'API_KEY_MISSING' && (
+                        <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-8">
+                            <ShieldAlert size={48} className="text-red-400 mb-4 animate-pulse" />
+                            <h3 className="text-white font-bold text-lg mb-2">Configuração Necessária</h3>
+                            <p className="text-gray-400 text-sm mb-6 max-w-md">
+                                Para utilizar a Inteligência Artificial, você precisa conectar sua chave de API do Google Gemini.
+                            </p>
+                            <button 
+                                onClick={() => onNavigate && onNavigate('api')}
+                                className="flex items-center gap-2 bg-red-500/20 hover:bg-red-500/30 text-red-100 border border-red-500/50 font-bold py-3 px-6 rounded-xl transition-all"
+                            >
+                                <Settings size={18} />
+                                Configurar Chave Agora
+                            </button>
+                        </div>
+                    )}
+
+                    {result && result !== 'API_KEY_MISSING' && (
                         <div className="prose prose-invert max-w-none prose-headings:font-serif prose-headings:text-slate-200 prose-p:text-slate-300 prose-strong:text-white">
                              <div className="whitespace-pre-wrap font-serif text-sm leading-relaxed tracking-wide">
                                 {result.split('\n').map((line, i) => (

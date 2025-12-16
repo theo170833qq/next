@@ -1,22 +1,19 @@
 import { GoogleGenAI, Type } from "@google/genai";
 
 const getClient = () => {
-  // 1. TENTA CHAVE DO LOCALSTORAGE (Prioridade Máxima para correções manuais pelo usuário)
+  // 1. TENTA CHAVE DO LOCALSTORAGE (Prioridade Máxima)
   const localKey = localStorage.getItem('user_custom_api_key');
   if (localKey && localKey.length > 20) {
       return new GoogleGenAI({ apiKey: localKey });
   }
 
   // 2. TENTA CHAVE DE AMBIENTE (Do Deploy/Vercel)
-  // O Vite injeta isso via 'define' no vite.config.ts
   const envKey = process.env.API_KEY;
-  
   if (envKey && envKey.length > 20) {
     return new GoogleGenAI({ apiKey: envKey });
   }
   
-  // Se não houver chave, retorna uma instância que falhará graciosamente depois
-  // ou lança um erro que a UI vai capturar para pedir a chave ao usuário
+  // Falha controlada para disparar UI de configuração
   throw new Error("API_KEY_MISSING");
 };
 
@@ -25,7 +22,7 @@ const generateWithFallback = async (params: any) => {
     try {
         const ai = getClient();
         
-        // Tenta modelos mais antigos/estáveis primeiro se o Flash falhar
+        // Modelos em ordem de preferência/estabilidade
         const models = [
             'gemini-2.5-flash',
             'gemini-1.5-flash',
@@ -41,13 +38,12 @@ const generateWithFallback = async (params: any) => {
                     ...params,
                     model: model
                 });
-                console.log(`✅ Sucesso com ${model}`);
                 return response;
             } catch (error: any) {
                 console.warn(`⚠️ Falha no modelo ${model}: ${error.message}`);
                 lastError = error;
                 
-                // Se for erro de chave inválida, para imediatamente e avisa o usuário
+                // Erros fatais de autenticação interrompem o loop
                 if (error.message?.includes('API key') || error.message?.includes('403')) {
                     throw new Error("API_KEY_INVALID");
                 }
@@ -56,8 +52,9 @@ const generateWithFallback = async (params: any) => {
         throw lastError;
 
     } catch (error: any) {
-        if (error.message === "API_KEY_MISSING") {
-             throw new Error("API_KEY_INVALID"); // Trata missing como invalid para disparar UI de configuração
+        // Normaliza o erro para a UI
+        if (error.message === "API_KEY_MISSING" || error.message === "API_KEY_INVALID" || error.message?.includes("API key")) {
+             throw new Error("API_KEY_MISSING");
         }
         throw error;
     }
@@ -88,10 +85,7 @@ export const generateMarketingContent = async (topic: string, platform: string):
 
     return response.text;
   } catch (error: any) {
-    console.error("Erro no Marketing Generator:", error);
-    if (error.message === "API_KEY_INVALID" || error.message?.includes("API key")) {
-        return "⚠️ **Configuração Necessária**: Não foi encontrada uma chave de API válida. Por favor, vá em **Ajustes > Sistema & API** e insira sua chave Google Gemini.";
-    }
+    if (error.message === "API_KEY_MISSING") return "API_KEY_MISSING";
     return `Erro de IA: ${error.message || "Serviço indisponível no momento."}`;
   }
 };
@@ -130,15 +124,10 @@ export const analyzeFinancialData = async (dataContext: string): Promise<any> =>
     const jsonString = rawText.replace(/```json|```/g, '').trim();
     return JSON.parse(jsonString);
   } catch (error: any) {
-    console.error("Erro na análise financeira:", error);
-    const msg = (error.message === "API_KEY_INVALID" || error.message?.includes("API key"))
-        ? "Chave de API inválida ou ausente. Configure em Ajustes." 
+    const msg = error.message === "API_KEY_MISSING" 
+        ? "API_KEY_MISSING" 
         : "Não foi possível conectar à IA.";
-        
-    return { 
-        analysis: msg, 
-        data: [] 
-    };
+    return { analysis: msg, data: [] };
   }
 };
 
@@ -153,12 +142,7 @@ export const getStrategicAdvice = async (query: string, history: string[]): Prom
 
         return response.text || "Sem resposta.";
     } catch (e: any) {
-        console.error("Erro no Advisor:", e);
-        
-        if (e.message === "API_KEY_INVALID" || e.message?.includes("API key") || e.message?.includes("403")) {
-             return `API_KEY_ERROR_FLAG`; // Sinalizador para o componente renderizar o botão de correção
-        }
-        
+        if (e.message === "API_KEY_MISSING") return `API_KEY_ERROR_FLAG`;
         return `⚠️ **Erro de Conexão**: ${e.message ? e.message.substring(0, 100) : "Erro desconhecido"}...`;
     }
 }
@@ -183,7 +167,7 @@ export const generateSalesStrategy = async (product: string, target: string, typ
         });
         return response.text || "Sem resposta.";
     } catch (error: any) {
-        if (error.message === "API_KEY_INVALID" || error.message?.includes("API key")) return "⚠️ **Erro de Chave**: Verifique suas configurações.";
+        if (error.message === "API_KEY_MISSING") return "API_KEY_MISSING";
         return `Erro: ${error.message}`;
     }
 };
@@ -206,7 +190,7 @@ export const generateHRContent = async (role: string, culture: string, type: 'jo
         });
         return response.text || "Sem resposta.";
     } catch (error: any) {
-        if (error.message === "API_KEY_INVALID" || error.message?.includes("API key")) return "⚠️ **Erro de Chave**: Verifique suas configurações.";
+        if (error.message === "API_KEY_MISSING") return "API_KEY_MISSING";
         return `Erro: ${error.message}`;
     }
 };
@@ -227,7 +211,7 @@ export const generateLegalDoc = async (docType: string, parties: string, details
         });
         return response.text || "Sem resposta.";
     } catch (error: any) {
-        if (error.message === "API_KEY_INVALID" || error.message?.includes("API key")) return "⚠️ **Erro de Chave**: Verifique suas configurações.";
+        if (error.message === "API_KEY_MISSING") return "API_KEY_MISSING";
         return `Erro: ${error.message}`;
     }
 };
@@ -255,7 +239,7 @@ export const generateProductSpec = async (featureName: string, userGoal: string,
         });
         return response.text || "Sem resposta.";
     } catch (error: any) {
-        if (error.message === "API_KEY_INVALID" || error.message?.includes("API key")) return "⚠️ **Erro de Chave**: Verifique suas configurações.";
+        if (error.message === "API_KEY_MISSING") return "API_KEY_MISSING";
         return `Erro: ${error.message}`;
     }
 };
@@ -279,7 +263,7 @@ export const generateSupportReply = async (customerMessage: string, tone: string
         });
         return response.text || "Sem resposta.";
     } catch (error: any) {
-        if (error.message === "API_KEY_INVALID" || error.message?.includes("API key")) return "⚠️ **Erro de Chave**: Verifique suas configurações.";
+        if (error.message === "API_KEY_MISSING") return "API_KEY_MISSING";
         return `Erro: ${error.message}`;
     }
 };

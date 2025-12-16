@@ -1,8 +1,12 @@
 import React, { useState } from 'react';
 import { generateHRContent } from '../services/gemini';
-import { Users2, FileText, MessageSquare, Sparkles, Copy, Loader2, Heart, Briefcase, Award } from 'lucide-react';
+import { Users2, FileText, MessageSquare, Sparkles, Copy, Loader2, Heart, Briefcase, Award, Settings, ShieldAlert } from 'lucide-react';
 
-const Team: React.FC = () => {
+interface TeamProps {
+  onNavigate?: (tab: string) => void;
+}
+
+const Team: React.FC<TeamProps> = ({ onNavigate }) => {
   const [activeTab, setActiveTab] = useState<'job_desc' | 'interview'>('job_desc');
   const [role, setRole] = useState('');
   const [culture, setCulture] = useState('');
@@ -110,7 +114,7 @@ const Team: React.FC = () => {
                          <div className="w-3 h-3 rounded-full bg-yellow-500/20 border border-yellow-500/50"></div>
                          <div className="w-3 h-3 rounded-full bg-green-500/20 border border-green-500/50"></div>
                      </div>
-                     {result && (
+                     {result && result !== 'API_KEY_MISSING' && (
                         <button onClick={() => navigator.clipboard.writeText(result)} className="text-gray-400 hover:text-white transition-colors">
                             <Copy size={18} />
                         </button>
@@ -131,15 +135,27 @@ const Team: React.FC = () => {
                             <div className="h-4 bg-white/5 rounded w-full"></div>
                             <div className="h-4 bg-white/5 rounded w-full"></div>
                             <div className="h-4 bg-white/5 rounded w-3/4"></div>
-                            <div className="h-4 bg-white/5 rounded w-5/6"></div>
-                            <br/>
-                            <div className="h-6 bg-white/10 rounded w-1/4 mb-4"></div>
-                            <div className="h-4 bg-white/5 rounded w-full"></div>
-                            <div className="h-4 bg-white/5 rounded w-full"></div>
                         </div>
                     )}
 
-                    {result && (
+                    {result === 'API_KEY_MISSING' && (
+                        <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-8">
+                            <ShieldAlert size={48} className="text-red-400 mb-4 animate-pulse" />
+                            <h3 className="text-white font-bold text-lg mb-2">Configuração Necessária</h3>
+                            <p className="text-gray-400 text-sm mb-6 max-w-md">
+                                Para utilizar a Inteligência Artificial, você precisa conectar sua chave de API do Google Gemini.
+                            </p>
+                            <button 
+                                onClick={() => onNavigate && onNavigate('api')}
+                                className="flex items-center gap-2 bg-red-500/20 hover:bg-red-500/30 text-red-100 border border-red-500/50 font-bold py-3 px-6 rounded-xl transition-all"
+                            >
+                                <Settings size={18} />
+                                Configurar Chave Agora
+                            </button>
+                        </div>
+                    )}
+
+                    {result && result !== 'API_KEY_MISSING' && (
                         <div className="prose prose-invert max-w-none prose-headings:text-cyan-100 prose-strong:text-cyan-300">
                              <div className="whitespace-pre-wrap font-sans text-base leading-relaxed text-gray-300">
                                 {result.split('\n').map((line, i) => {

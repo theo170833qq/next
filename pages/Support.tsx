@@ -1,8 +1,12 @@
 import React, { useState } from 'react';
 import { generateSupportReply } from '../services/gemini';
-import { LifeBuoy, MessageCircle, Heart, Copy, Loader2, Smile, Frown, Meh, Zap } from 'lucide-react';
+import { LifeBuoy, MessageCircle, Heart, Copy, Loader2, Smile, Frown, Meh, Zap, Settings, ShieldAlert } from 'lucide-react';
 
-const Support: React.FC = () => {
+interface SupportProps {
+  onNavigate?: (tab: string) => void;
+}
+
+const Support: React.FC<SupportProps> = ({ onNavigate }) => {
   const [message, setMessage] = useState('');
   const [tone, setTone] = useState('Empático e Profissional');
   const [result, setResult] = useState('');
@@ -89,7 +93,7 @@ const Support: React.FC = () => {
                      <h3 className="font-bold text-white flex items-center gap-2">
                         <LifeBuoy size={18} className="text-teal-400" /> Resposta Sugerida
                      </h3>
-                     {result && (
+                     {result && result !== 'API_KEY_MISSING' && (
                         <button onClick={() => navigator.clipboard.writeText(result)} className="text-gray-400 hover:text-white transition-colors">
                             <Copy size={18} />
                         </button>
@@ -115,7 +119,24 @@ const Support: React.FC = () => {
                         </div>
                     )}
 
-                    {result && (
+                    {result === 'API_KEY_MISSING' && (
+                        <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-8">
+                            <ShieldAlert size={48} className="text-red-400 mb-4 animate-pulse" />
+                            <h3 className="text-white font-bold text-lg mb-2">Configuração Necessária</h3>
+                            <p className="text-gray-400 text-sm mb-6 max-w-md">
+                                Para utilizar a Inteligência Artificial, você precisa conectar sua chave de API do Google Gemini.
+                            </p>
+                            <button 
+                                onClick={() => onNavigate && onNavigate('api')}
+                                className="flex items-center gap-2 bg-red-500/20 hover:bg-red-500/30 text-red-100 border border-red-500/50 font-bold py-3 px-6 rounded-xl transition-all"
+                            >
+                                <Settings size={18} />
+                                Configurar Chave Agora
+                            </button>
+                        </div>
+                    )}
+
+                    {result && result !== 'API_KEY_MISSING' && (
                         <div className="prose prose-invert max-w-none">
                              <div className="whitespace-pre-wrap font-sans text-base leading-relaxed text-gray-200">
                                 {result.split('\n').map((line, i) => {

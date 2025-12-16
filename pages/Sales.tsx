@@ -1,8 +1,12 @@
 import React, { useState } from 'react';
 import { generateSalesStrategy } from '../services/gemini';
-import { PhoneCall, Mail, ShieldAlert, Sparkles, Copy, Loader2, ArrowRight, Target, Briefcase } from 'lucide-react';
+import { PhoneCall, Mail, ShieldAlert, Sparkles, Copy, Loader2, ArrowRight, Target, Briefcase, Settings } from 'lucide-react';
 
-const Sales: React.FC = () => {
+interface SalesProps {
+  onNavigate?: (tab: string) => void;
+}
+
+const Sales: React.FC<SalesProps> = ({ onNavigate }) => {
   const [mode, setMode] = useState<'cold_mail' | 'objection' | 'script'>('cold_mail');
   const [product, setProduct] = useState('');
   const [target, setTarget] = useState('');
@@ -115,7 +119,7 @@ const Sales: React.FC = () => {
                     <h3 className="font-bold text-white flex items-center gap-2">
                         <ArrowRight size={16} className="text-orange-500" /> Resultado Gerado
                     </h3>
-                    {result && (
+                    {result && result !== 'API_KEY_MISSING' && (
                         <button 
                             onClick={() => navigator.clipboard.writeText(result)}
                             className="text-xs flex items-center gap-2 text-gray-400 hover:text-white bg-white/5 hover:bg-white/10 px-3 py-1.5 rounded-lg transition-colors"
@@ -141,7 +145,24 @@ const Sales: React.FC = () => {
                         </div>
                     )}
 
-                    {result && (
+                    {result === 'API_KEY_MISSING' && (
+                        <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-8">
+                            <ShieldAlert size={48} className="text-red-400 mb-4 animate-pulse" />
+                            <h3 className="text-white font-bold text-lg mb-2">Configuração Necessária</h3>
+                            <p className="text-gray-400 text-sm mb-6 max-w-md">
+                                Para utilizar a Inteligência Artificial, você precisa conectar sua chave de API do Google Gemini.
+                            </p>
+                            <button 
+                                onClick={() => onNavigate && onNavigate('api')}
+                                className="flex items-center gap-2 bg-red-500/20 hover:bg-red-500/30 text-red-100 border border-red-500/50 font-bold py-3 px-6 rounded-xl transition-all"
+                            >
+                                <Settings size={18} />
+                                Configurar Chave Agora
+                            </button>
+                        </div>
+                    )}
+
+                    {result && result !== 'API_KEY_MISSING' && (
                         <div className="prose prose-invert max-w-none prose-p:text-gray-300 prose-headings:text-white prose-strong:text-orange-200 prose-a:text-orange-400">
                              <div className="whitespace-pre-wrap font-sans text-sm leading-relaxed">
                                 {result.split('\n').map((line, i) => (
