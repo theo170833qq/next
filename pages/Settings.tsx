@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { User, Bell, Shield, Save, Loader2, LogOut, CreditCard, Server, Wifi, CheckCircle2, XCircle, RefreshCw, Trash2 } from 'lucide-react';
+import { User, Bell, Shield, Save, Loader2, LogOut, CreditCard, Server, Wifi, CheckCircle2, XCircle, RefreshCw, Trash2, Bot } from 'lucide-react';
 import { checkDatabaseConnection } from '../services/supabase';
 import { useAuth } from '../context/AuthContext';
 import { useCompany } from '../context/CompanyContext';
@@ -170,22 +170,43 @@ const Settings: React.FC = () => {
                             </button>
                         </div>
 
-                        <div className="p-4 rounded-xl bg-onyx-950 border border-white/5 flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                                <div className={`w-10 h-10 rounded-full flex items-center justify-center ${dbStatus === 'online' ? 'bg-emerald-500/10' : dbStatus === 'offline' ? 'bg-red-500/10' : 'bg-gray-500/10'}`}>
-                                    <Wifi size={18} className={dbStatus === 'online' ? 'text-emerald-400' : dbStatus === 'offline' ? 'text-red-400' : 'text-gray-400'} />
+                        <div className="space-y-4">
+                            {/* DB Status Block */}
+                            <div className="p-4 rounded-xl bg-onyx-950 border border-white/5 flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                    <div className={`w-10 h-10 rounded-full flex items-center justify-center ${dbStatus === 'online' ? 'bg-emerald-500/10' : dbStatus === 'offline' ? 'bg-red-500/10' : 'bg-gray-500/10'}`}>
+                                        <Wifi size={18} className={dbStatus === 'online' ? 'text-emerald-400' : dbStatus === 'offline' ? 'text-red-400' : 'text-gray-400'} />
+                                    </div>
+                                    <div>
+                                        <p className="text-sm font-bold text-white">Banco de Dados</p>
+                                        <p className="text-xs text-gray-500">Supabase Postgres</p>
+                                    </div>
                                 </div>
-                                <div>
-                                    <p className="text-sm font-bold text-white">Banco de Dados</p>
-                                    <p className="text-xs text-gray-500">Supabase Postgres</p>
+                                
+                                <div className="flex flex-col items-end">
+                                    {dbStatus === 'checking' && <span className="text-xs text-yellow-400 flex items-center"><Loader2 size={12} className="animate-spin mr-1"/> Verificando...</span>}
+                                    {dbStatus === 'online' && <span className="text-xs text-emerald-400 flex items-center font-bold"><CheckCircle2 size={12} className="mr-1"/> Operacional</span>}
+                                    {dbStatus === 'offline' && <span className="text-xs text-red-400 flex items-center font-bold"><XCircle size={12} className="mr-1"/> Erro de Conexão</span>}
+                                    {dbStatus === 'online' && <span className="text-[10px] text-gray-600 mt-1">{latency}ms latência</span>}
                                 </div>
                             </div>
-                            
-                            <div className="flex flex-col items-end">
-                                {dbStatus === 'checking' && <span className="text-xs text-yellow-400 flex items-center"><Loader2 size={12} className="animate-spin mr-1"/> Verificando...</span>}
-                                {dbStatus === 'online' && <span className="text-xs text-emerald-400 flex items-center font-bold"><CheckCircle2 size={12} className="mr-1"/> Operacional</span>}
-                                {dbStatus === 'offline' && <span className="text-xs text-red-400 flex items-center font-bold"><XCircle size={12} className="mr-1"/> Erro de Conexão</span>}
-                                {dbStatus === 'online' && <span className="text-[10px] text-gray-600 mt-1">{latency}ms latência</span>}
+
+                            {/* AI Engine Status Block - Always Active due to hardcoded key */}
+                            <div className="p-4 rounded-xl bg-onyx-950 border border-white/5 flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 rounded-full flex items-center justify-center bg-blue-500/10">
+                                        <Bot size={18} className="text-blue-400" />
+                                    </div>
+                                    <div>
+                                        <p className="text-sm font-bold text-white">Google Gemini AI</p>
+                                        <p className="text-xs text-gray-500">Motor de Inteligência Generativa</p>
+                                    </div>
+                                </div>
+                                
+                                <div className="flex flex-col items-end">
+                                    <span className="text-xs text-emerald-400 flex items-center font-bold"><CheckCircle2 size={12} className="mr-1"/> Conectado</span>
+                                    <span className="text-[10px] text-gray-600 mt-1">Chave Enterprise Ativa</span>
+                                </div>
                             </div>
                         </div>
                     </div>

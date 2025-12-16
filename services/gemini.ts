@@ -1,19 +1,16 @@
 import { GoogleGenAI, Type } from "@google/genai";
 
 const getClient = () => {
-  // 1. TENTA CHAVE DO LOCALSTORAGE (Prioridade Máxima)
-  const localKey = localStorage.getItem('user_custom_api_key');
-  if (localKey && localKey.length > 20) {
-      return new GoogleGenAI({ apiKey: localKey });
-  }
-
-  // 2. TENTA CHAVE DE AMBIENTE (Do Deploy/Vercel)
-  const envKey = process.env.API_KEY;
-  if (envKey && envKey.length > 20) {
-    return new GoogleGenAI({ apiKey: envKey });
+  // Obtém a chave exclusivamente via process.env.API_KEY conforme diretrizes.
+  // A variável é injetada pelo vite.config.ts.
+  
+  const apiKey = process.env.API_KEY;
+  
+  if (apiKey && apiKey.length > 20 && !apiKey.includes("undefined")) {
+    return new GoogleGenAI({ apiKey: apiKey });
   }
   
-  // Falha controlada para disparar UI de configuração
+  console.error("CRITICAL: API Key not found or invalid.");
   throw new Error("API_KEY_MISSING");
 };
 
@@ -23,17 +20,16 @@ const generateWithFallback = async (params: any) => {
         const ai = getClient();
         
         // Modelos em ordem de preferência/estabilidade
+        // Removidos modelos depreciados conforme diretrizes
         const models = [
             'gemini-2.5-flash',
-            'gemini-1.5-flash',
-            'gemini-1.5-flash-latest' 
+            'gemini-flash-latest'
         ];
 
         let lastError = null;
 
         for (const model of models) {
             try {
-                console.log(`🚀 Tentando conectar com modelo: ${model}...`);
                 const response = await ai.models.generateContent({
                     ...params,
                     model: model
@@ -54,7 +50,7 @@ const generateWithFallback = async (params: any) => {
     } catch (error: any) {
         // Normaliza o erro para a UI
         if (error.message === "API_KEY_MISSING" || error.message === "API_KEY_INVALID" || error.message?.includes("API key")) {
-             throw new Error("API_KEY_MISSING");
+             return { text: "API_KEY_MISSING" }; // Retorna objeto seguro em vez de throw para evitar crash total
         }
         throw error;
     }
@@ -79,13 +75,12 @@ export const generateMarketingContent = async (topic: string, platform: string):
       }
     });
 
-    if (!response.text) {
-      throw new Error("A IA retornou uma resposta vazia.");
-    }
+    if (response.text === "API_KEY_MISSING") throw new Error("API_KEY_MISSING");
+    if (!response.text) throw new Error("A IA retornou uma resposta vazia.");
 
     return response.text;
   } catch (error: any) {
-    if (error.message === "API_KEY_MISSING") return "API_KEY_MISSING";
+    if (error.message === "API_KEY_MISSING") return "Erro de Configuração: Chave de API inválida.";
     return `Erro de IA: ${error.message || "Serviço indisponível no momento."}`;
   }
 };
@@ -120,12 +115,14 @@ export const analyzeFinancialData = async (dataContext: string): Promise<any> =>
       }
     });
 
+    if (response.text === "API_KEY_MISSING") throw new Error("API_KEY_MISSING");
+
     const rawText = response.text || '{}';
     const jsonString = rawText.replace(/```json|```/g, '').trim();
     return JSON.parse(jsonString);
   } catch (error: any) {
     const msg = error.message === "API_KEY_MISSING" 
-        ? "API_KEY_MISSING" 
+        ? "Erro de API Key." 
         : "Não foi possível conectar à IA.";
     return { analysis: msg, data: [] };
   }
@@ -140,9 +137,10 @@ export const getStrategicAdvice = async (query: string, history: string[]): Prom
             }
         });
 
+        if (response.text === "API_KEY_MISSING") return "API_KEY_ERROR_FLAG";
         return response.text || "Sem resposta.";
     } catch (e: any) {
-        if (e.message === "API_KEY_MISSING") return `API_KEY_ERROR_FLAG`;
+        if (e.message === "API_KEY_MISSING") return `Erro: Chave de API inválida no sistema.`;
         return `⚠️ **Erro de Conexão**: ${e.message ? e.message.substring(0, 100) : "Erro desconhecido"}...`;
     }
 }
@@ -165,6 +163,8 @@ export const generateSalesStrategy = async (product: string, target: string, typ
                 systemInstruction: "Você é um especialista em Vendas B2B, treinado em metodologias como Spin Selling e Sandler.",
             }
         });
+        
+        if (response.text === "API_KEY_MISSING") throw new Error("API_KEY_MISSING");
         return response.text || "Sem resposta.";
     } catch (error: any) {
         if (error.message === "API_KEY_MISSING") return "API_KEY_MISSING";
@@ -188,6 +188,8 @@ export const generateHRContent = async (role: string, culture: string, type: 'jo
                 systemInstruction: "Você é um Head de RH (Recursos Humanos) sênior especializado em Tech e Startups.",
             }
         });
+        
+        if (response.text === "API_KEY_MISSING") throw new Error("API_KEY_MISSING");
         return response.text || "Sem resposta.";
     } catch (error: any) {
         if (error.message === "API_KEY_MISSING") return "API_KEY_MISSING";
@@ -209,6 +211,8 @@ export const generateLegalDoc = async (docType: string, parties: string, details
                 systemInstruction: "Você é uma IA de assistência jurídica precisa e formal. Sempre inclua um aviso de que o documento deve ser revisado por um advogado humano.",
             }
         });
+        
+        if (response.text === "API_KEY_MISSING") throw new Error("API_KEY_MISSING");
         return response.text || "Sem resposta.";
     } catch (error: any) {
         if (error.message === "API_KEY_MISSING") return "API_KEY_MISSING";
@@ -237,6 +241,8 @@ export const generateProductSpec = async (featureName: string, userGoal: string,
                 systemInstruction: "Você é um PM experiente focado em metodologias Ágeis e Scrum.",
             }
         });
+        
+        if (response.text === "API_KEY_MISSING") throw new Error("API_KEY_MISSING");
         return response.text || "Sem resposta.";
     } catch (error: any) {
         if (error.message === "API_KEY_MISSING") return "API_KEY_MISSING";
@@ -261,6 +267,8 @@ export const generateSupportReply = async (customerMessage: string, tone: string
                 systemInstruction: "Você é um especialista em Customer Success e Suporte.",
             }
         });
+        
+        if (response.text === "API_KEY_MISSING") throw new Error("API_KEY_MISSING");
         return response.text || "Sem resposta.";
     } catch (error: any) {
         if (error.message === "API_KEY_MISSING") return "API_KEY_MISSING";
