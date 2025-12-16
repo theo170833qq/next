@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { User, Bell, Shield, Key, Save, Loader2, LogOut, CreditCard, Mail, Server, Wifi, CheckCircle2, XCircle, RefreshCw, Trash2, Eye, EyeOff, AlertTriangle } from 'lucide-react';
+import { User, Bell, Shield, Save, Loader2, LogOut, CreditCard, Server, Wifi, CheckCircle2, XCircle, RefreshCw, Trash2 } from 'lucide-react';
 import { checkDatabaseConnection } from '../services/supabase';
 import { useAuth } from '../context/AuthContext';
 import { useCompany } from '../context/CompanyContext';
@@ -12,10 +12,6 @@ const Settings: React.FC = () => {
   const [dbStatus, setDbStatus] = useState<'checking' | 'online' | 'offline'>('checking');
   const [latency, setLatency] = useState(0);
   
-  // Custom API Key State
-  const [customKey, setCustomKey] = useState('');
-  const [showKey, setShowKey] = useState(false);
-  
   const [notificationState, setNotificationState] = useState({
     email: true,
     push: false,
@@ -25,8 +21,6 @@ const Settings: React.FC = () => {
   useEffect(() => {
     if (activeSection === 'api') {
       runSystemCheck();
-      const savedKey = localStorage.getItem('user_custom_api_key');
-      if (savedKey) setCustomKey(savedKey);
     }
   }, [activeSection]);
 
@@ -42,13 +36,7 @@ const Settings: React.FC = () => {
   const handleSave = () => {
     setLoading(true);
     
-    // Salva a chave customizada se houver
-    if (activeSection === 'api' && customKey) {
-        localStorage.setItem('user_custom_api_key', customKey.trim());
-    } else if (activeSection === 'api' && !customKey) {
-        localStorage.removeItem('user_custom_api_key');
-    }
-
+    // Simulação de salvamento de outras preferências
     setTimeout(() => {
       setLoading(false);
       alert("Configurações salvas e aplicadas com sucesso!");
@@ -69,7 +57,7 @@ const Settings: React.FC = () => {
   const sections = [
     { id: 'profile', label: 'Perfil', icon: User },
     { id: 'notifications', label: 'Notificações', icon: Bell },
-    { id: 'api', label: 'Sistema & API', icon: Server },
+    { id: 'api', label: 'Status do Sistema', icon: Server },
     { id: 'security', label: 'Segurança', icon: Shield },
     { id: 'billing', label: 'Assinatura', icon: CreditCard },
   ];
@@ -80,7 +68,7 @@ const Settings: React.FC = () => {
     <div className="max-w-4xl mx-auto space-y-8 animate-slide-up pb-10">
       <header className="border-b border-white/5 pb-6">
         <h1 className="text-3xl md:text-4xl font-extrabold text-white">Configurações</h1>
-        <p className="text-gray-400 mt-2 text-sm md:text-base">Gerencie sua conta, preferências e chaves de acesso.</p>
+        <p className="text-gray-400 mt-2 text-sm md:text-base">Gerencie sua conta e preferências.</p>
       </header>
 
       {/* Main Grid */}
@@ -163,60 +151,15 @@ const Settings: React.FC = () => {
                 </div>
             )}
 
-            {/* API Keys Configuration */}
+            {/* System Status (Ex-API Section) */}
             {activeSection === 'api' && (
                 <div className="space-y-6 animate-fade-in">
                     
-                    {/* Manual API Key Input */}
-                    <div className="glass-card rounded-3xl p-6 md:p-8 border border-white/5 relative overflow-hidden">
-                        <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/10 rounded-full blur-3xl -mr-10 -mt-10"></div>
-                        
-                        <h3 className="text-lg font-bold text-white flex items-center mb-4 relative z-10">
-                            <Key className="mr-2 text-yellow-400" size={20}/> Configuração de IA (Gemini)
-                        </h3>
-                        
-                        <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-xl p-4 mb-6 flex items-start gap-3">
-                            <AlertTriangle className="text-yellow-400 shrink-0 mt-0.5" size={16} />
-                            <div>
-                                <p className="text-yellow-200 text-xs font-bold">Correção de Chave Inválida</p>
-                                <p className="text-yellow-200/70 text-[11px] mt-1">
-                                    Se você está vendo erros de "API Key Inválida", insira sua própria chave abaixo. Ela terá prioridade sobre a configuração do sistema.
-                                </p>
-                            </div>
-                        </div>
-
-                        <div className="space-y-3 relative z-10">
-                            <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Sua Chave de API Google (Gemini)</label>
-                            <div className="relative group">
-                                <div className="absolute inset-0 bg-indigo-500/10 rounded-xl blur opacity-0 group-focus-within:opacity-100 transition-opacity duration-500"></div>
-                                <div className="relative flex items-center">
-                                    <Key className="absolute left-4 text-gray-500" size={18} />
-                                    <input 
-                                        type={showKey ? "text" : "password"}
-                                        value={customKey}
-                                        onChange={(e) => setCustomKey(e.target.value)}
-                                        placeholder="Cole sua chave aqui (começa com AIza...)"
-                                        className="w-full bg-onyx-950 border border-white/10 rounded-xl pl-12 pr-12 py-4 text-white placeholder-gray-600 focus:ring-1 focus:ring-indigo-500 outline-none transition-all font-mono text-sm"
-                                    />
-                                    <button 
-                                        onClick={() => setShowKey(!showKey)}
-                                        className="absolute right-4 text-gray-500 hover:text-white transition-colors"
-                                    >
-                                        {showKey ? <EyeOff size={18} /> : <Eye size={18} />}
-                                    </button>
-                                </div>
-                            </div>
-                            <p className="text-[10px] text-gray-500 pl-1">
-                                Não tem uma chave? <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noreferrer" className="text-indigo-400 hover:underline">Gere uma gratuitamente no Google AI Studio</a>.
-                            </p>
-                        </div>
-                    </div>
-
                     {/* Database Status */}
                     <div className="glass-card rounded-3xl p-6 md:p-8 border border-white/5">
                         <div className="flex items-center justify-between mb-6">
                             <h3 className="text-lg font-bold text-white flex items-center">
-                                <Server className="mr-2 text-emerald-400" size={20}/> Status do Sistema
+                                <Server className="mr-2 text-emerald-400" size={20}/> Integridade do Sistema
                             </h3>
                             <button 
                                 onClick={runSystemCheck} 
