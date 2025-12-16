@@ -21,6 +21,9 @@ const App: React.FC = () => {
   const { user, loading } = useAuth();
   const { companyData } = useCompany();
 
+  // Timestamp de Build para verificar atualização
+  const BUILD_VERSION = "v1.2 (Hardcoded Key Fix)";
+
   // Tela de Loading Inicial da Aplicação
   if (loading) {
     return (
@@ -94,6 +97,11 @@ const App: React.FC = () => {
 
         <div className="relative z-10 max-w-[1600px] mx-auto pb-20 md:pb-10">
             {renderContent()}
+        </div>
+
+        {/* Version Indicator for Debugging Vercel Updates */}
+        <div className="fixed bottom-2 right-2 z-50 text-[10px] text-gray-700 bg-white/5 px-2 py-1 rounded pointer-events-none">
+            Build: {BUILD_VERSION}
         </div>
       </main>
     </div>

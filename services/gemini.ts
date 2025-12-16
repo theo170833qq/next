@@ -1,55 +1,61 @@
 import { GoogleGenAI, Type } from "@google/genai";
 
-// Chave fixa de segurança para garantir funcionamento imediato
-const FIXED_KEY = "AIzaSyDGTmixEnDHms2t-vXUuM3BwUn_ZYvPrFw";
+// --- CONFIGURAÇÃO CRÍTICA ---
+// A chave está inserida diretamente aqui para ignorar falhas de variáveis de ambiente no Vercel.
+const HARDCODED_KEY = "AIzaSyDGTmixEnDHms2t-vXUuM3BwUn_ZYvPrFw"; 
 
 const getClient = () => {
-  // Tenta process.env (injetado pelo Vite) ou usa a chave fixa diretamente
-  const apiKey = process.env.API_KEY || FIXED_KEY;
+  // Ignora process.env e usa a chave direta para garantir funcionamento
+  const apiKey = HARDCODED_KEY;
   
-  if (apiKey && apiKey.length > 20 && !apiKey.includes("undefined")) {
-    return new GoogleGenAI({ apiKey: apiKey });
+  if (!apiKey || apiKey.includes("undefined")) {
+    console.error("CRITICAL: API Key is missing/undefined in getClient");
+    throw new Error("API_KEY_MISSING");
   }
   
-  // Fallback final para a chave fixa se tudo falhar
-  return new GoogleGenAI({ apiKey: FIXED_KEY });
+  return new GoogleGenAI({ apiKey: apiKey });
 };
 
-// Função específica para testar se a chave é válida (usada no Settings)
+// Função de Teste de Conexão (Chamada no Settings)
 export const validateGeminiConnection = async (): Promise<{ success: boolean; message: string; latency: number }> => {
     const start = performance.now();
     try {
         const ai = getClient();
-        // Tenta uma geração mínima (1 token) para validar autenticação
+        console.log("Validating Gemini connection with key ending in...", HARDCODED_KEY.slice(-4));
+        
         await ai.models.generateContent({
             model: 'gemini-2.5-flash',
-            contents: 'Hi',
+            contents: 'ping',
         });
         const end = performance.now();
-        return { success: true, message: "Chave Válida e Ativa", latency: Math.round(end - start) };
+        return { success: true, message: "Conexão Estabelecida (Chave Válida)", latency: Math.round(end - start) };
     } catch (error: any) {
-        console.error("Gemini Validation Error:", error);
+        console.error("Gemini Validation Error Full:", error);
+        
         let msg = "Erro desconhecido";
-        if (error.message?.includes("API key")) msg = "Chave de API Inválida";
-        if (error.message?.includes("403")) msg = "Acesso Negado (403)";
-        if (error.message?.includes("429")) msg = "Limite de Quota Excedido";
-        if (error.message?.includes("fetch")) msg = "Erro de Conexão/Network";
+        const errString = error.toString().toLowerCase();
+
+        if (errString.includes("403") || errString.includes("permission denied")) {
+            msg = "ERRO 403: Chave bloqueada ou restrita a IPs/Domínios incorretos no Google Cloud.";
+        } else if (errString.includes("key") || errString.includes("api key")) {
+            msg = "Chave de API Inválida/Não encontrada.";
+        } else if (errString.includes("429") || errString.includes("quota")) {
+            msg = "Limite de Quota Excedido (Erro 429).";
+        } else if (errString.includes("fetch") || errString.includes("network")) {
+            msg = "Erro de Rede/Conexão (Vercel Firewall?).";
+        } else {
+            msg = `Erro: ${error.message || error.toString()}`;
+        }
         
         return { success: false, message: msg, latency: 0 };
     }
 };
 
-// Sistema de Fallback em Cascata
 const generateWithFallback = async (params: any) => {
     try {
         const ai = getClient();
-        
-        // Modelos em ordem de preferência/estabilidade
-        const models = [
-            'gemini-2.5-flash',
-            'gemini-flash-latest',
-            'gemini-1.5-flash'
-        ];
+        // Lista de modelos simplificada para evitar erros de roteamento
+        const models = ['gemini-2.5-flash', 'gemini-1.5-flash'];
 
         let lastError = null;
 
@@ -61,241 +67,128 @@ const generateWithFallback = async (params: any) => {
                 });
                 return response;
             } catch (error: any) {
-                console.warn(`⚠️ Falha no modelo ${model}: ${error.message}`);
+                console.warn(`Tentativa falhou no modelo ${model}:`, error);
                 lastError = error;
-                
-                // Erros fatais de autenticação interrompem o loop
-                if (error.message?.includes('API key') || error.message?.includes('403')) {
-                    throw new Error("API_KEY_INVALID");
+                // Se o erro for de autenticação, não adianta tentar outro modelo
+                if (error.toString().includes('403') || error.toString().toLowerCase().includes('key')) {
+                    throw error;
                 }
             }
         }
         throw lastError;
 
     } catch (error: any) {
-        if (error.message === "API_KEY_MISSING" || error.message === "API_KEY_INVALID" || error.message?.includes("API key")) {
-             return { text: "API_KEY_MISSING" }; 
-        }
+        // Log para debug no console do navegador
+        console.error("Gemini Generate Error:", error);
+        
+        // Retorna erro formatado para a UI não quebrar
+        const errStr = error.toString();
+        if (errStr.includes("403")) return { text: "ERRO_403_RESTRICTION" };
+        if (errStr.includes("API key")) return { text: "API_KEY_INVALID" };
+        
         throw error;
     }
 };
 
 export const generateMarketingContent = async (topic: string, platform: string): Promise<string> => {
   try {
-    const prompt = `Crie um post para o ${platform} sobre o seguinte tópico: "${topic}".
-    O conteúdo deve ser engajador, profissional e visualmente descritivo.
-    Inclua:
-    1. Um título chamativo (Headline).
-    2. O corpo do texto.
-    3. 5 Hashtags relevantes.
-    4. Uma descrição detalhada para uma imagem que acompanharia esse post (Prompt de imagem).
-    
-    Formate a resposta em Markdown.`;
+    const prompt = `Crie um post para o ${platform} sobre: "${topic}". Seja curto, viral e profissional. Formato Markdown.`;
+    const response = await generateWithFallback({ contents: prompt });
 
-    const response = await generateWithFallback({
-      contents: prompt,
-      config: {
-        systemInstruction: "Atue como um especialista em marketing digital de classe mundial.",
-      }
-    });
-
-    if (response.text === "API_KEY_MISSING") throw new Error("API_KEY_MISSING");
-    if (!response.text) throw new Error("A IA retornou uma resposta vazia.");
+    if (response.text === "ERRO_403_RESTRICTION") return "⚠️ Erro 403: Sua chave API tem restrições (Referrer/IP) que bloqueiam o Vercel. Verifique o Google Cloud Console.";
+    if (response.text === "API_KEY_INVALID") return "⚠️ Erro de Chave: A chave configurada é inválida.";
+    if (!response.text) throw new Error("Resposta vazia da IA.");
 
     return response.text;
   } catch (error: any) {
-    if (error.message === "API_KEY_MISSING") return "Erro de Configuração: Chave de API inválida.";
-    return `Erro de IA: ${error.message || "Serviço indisponível no momento."}`;
+    return `Erro ao gerar: ${error.message}`;
   }
 };
 
 export const analyzeFinancialData = async (dataContext: string): Promise<any> => {
   try {
     const response = await generateWithFallback({
-      contents: `Analise o seguinte contexto financeiro: "${dataContext}".
-      Gere uma projeção financeira fictícia para 6 meses.
-      Retorne APENAS JSON válido.
-      `,
-      config: {
-        responseMimeType: "application/json",
-        responseSchema: {
-            type: Type.OBJECT,
-            properties: {
-                analysis: { type: Type.STRING },
-                data: {
-                    type: Type.ARRAY,
-                    items: {
-                        type: Type.OBJECT,
-                        properties: {
-                            month: { type: Type.STRING },
-                            revenue: { type: Type.NUMBER },
-                            expenses: { type: Type.NUMBER },
-                            profit: { type: Type.NUMBER }
-                        }
-                    }
-                }
-            }
-        }
-      }
+      contents: `Analise: "${dataContext}". Gere projeção 6 meses. Retorne JSON: {analysis:string, data:[{month, revenue, expenses, profit}]}`,
+      config: { responseMimeType: "application/json" }
     });
 
-    if (response.text === "API_KEY_MISSING") throw new Error("API_KEY_MISSING");
+    if (response.text === "ERRO_403_RESTRICTION") return { analysis: "⚠️ Erro 403: Chave bloqueada pelo Google.", data: [] };
+    if (response.text === "API_KEY_INVALID") return { analysis: "⚠️ Chave Inválida.", data: [] };
 
-    const rawText = response.text || '{}';
-    const jsonString = rawText.replace(/```json|```/g, '').trim();
+    const jsonString = (response.text || '{}').replace(/```json|```/g, '').trim();
     return JSON.parse(jsonString);
   } catch (error: any) {
-    const msg = error.message === "API_KEY_MISSING" 
-        ? "Erro de API Key." 
-        : "Não foi possível conectar à IA.";
-    return { analysis: msg, data: [] };
+    return { analysis: `Erro: ${error.message}`, data: [] };
   }
 };
 
 export const getStrategicAdvice = async (query: string, history: string[]): Promise<string> => {
     try {
         const response = await generateWithFallback({
-            contents: `Histórico: ${JSON.stringify(history)}\n\nUsuário: ${query}`,
-            config: {
-                systemInstruction: "Você é um Advisor Executivo sênior. Responda de forma estratégica, direta e visualmente organizada (Markdown)."
-            }
+            contents: `Histórico: ${JSON.stringify(history)}\nUsuário: ${query}`,
         });
+        
+        if (response.text === "ERRO_403_RESTRICTION") return "⚠️ **ERRO CRÍTICO (403)**: A chave de API foi rejeitada pelo Google. Isso geralmente acontece quando a chave tem restrições de 'Application restrictions' (HTTP Referrers) que não incluem o domínio atual do Vercel, ou restrições de API.";
+        if (response.text === "API_KEY_INVALID") return "⚠️ Chave de API Inválida.";
 
-        if (response.text === "API_KEY_MISSING") return "API_KEY_ERROR_FLAG";
         return response.text || "Sem resposta.";
     } catch (e: any) {
-        if (e.message === "API_KEY_MISSING") return `Erro: Chave de API inválida no sistema.`;
-        return `⚠️ **Erro de Conexão**: ${e.message ? e.message.substring(0, 100) : "Erro desconhecido"}...`;
+        return `Erro de conexão: ${e.message}`;
     }
 }
 
-// --- MÓDULO DE VENDAS ---
-export const generateSalesStrategy = async (product: string, target: string, type: 'cold_mail' | 'objection' | 'script'): Promise<string> => {
+export const generateSalesStrategy = async (product: string, target: string, type: string): Promise<string> => {
     try {
-        let prompt = "";
-        if (type === 'cold_mail') {
-            prompt = `Escreva um Cold Email B2B altamente persuasivo para vender "${product}" para "${target}". Use a estrutura AIDA (Atenção, Interesse, Desejo, Ação). Seja breve e profissional.`;
-        } else if (type === 'objection') {
-            prompt = `O cliente ("${target}") disse que "${product}" está muito caro. Gere 3 scripts de resposta para contornar essa objeção de preço focando em ROI e valor.`;
-        } else {
-            prompt = `Crie um roteiro de vendas (Sales Script) telefônico de 2 minutos para oferecer "${product}" para "${target}". Inclua introdução, perguntas de qualificação e fechamento.`;
-        }
-
-        const response = await generateWithFallback({
-            contents: prompt,
-            config: {
-                systemInstruction: "Você é um especialista em Vendas B2B, treinado em metodologias como Spin Selling e Sandler.",
-            }
-        });
+        const prompt = `Atue como expert em vendas. Produto: ${product}. Alvo: ${target}. Tipo: ${type}. Crie estratégia.`;
+        const response = await generateWithFallback({ contents: prompt });
         
-        if (response.text === "API_KEY_MISSING") throw new Error("API_KEY_MISSING");
+        if (response.text === "ERRO_403_RESTRICTION") return "⚠️ Erro 403: Chave bloqueada. Verifique restrições no Google Cloud.";
         return response.text || "Sem resposta.";
     } catch (error: any) {
-        if (error.message === "API_KEY_MISSING") return "API_KEY_MISSING";
         return `Erro: ${error.message}`;
     }
 };
 
-// --- MÓDULO DE RH ---
-export const generateHRContent = async (role: string, culture: string, type: 'job_desc' | 'interview'): Promise<string> => {
+export const generateHRContent = async (role: string, culture: string, type: string): Promise<string> => {
     try {
-        let prompt = "";
-        if (type === 'job_desc') {
-            prompt = `Crie uma Job Description (Descrição de Vaga) atraente e moderna para o cargo de "${role}". A cultura da empresa é: "${culture}". Inclua responsabilidades, requisitos e benefícios. Use formatação Markdown.`;
-        } else {
-            prompt = `Gere 5 perguntas de entrevista comportamental e técnica para um candidato a "${role}", focando em avaliar se ele se encaixa numa cultura "${culture}". Inclua o que esperar de uma boa resposta.`;
-        }
-
-        const response = await generateWithFallback({
-            contents: prompt,
-            config: {
-                systemInstruction: "Você é um Head de RH (Recursos Humanos) sênior especializado em Tech e Startups.",
-            }
-        });
-        
-        if (response.text === "API_KEY_MISSING") throw new Error("API_KEY_MISSING");
+        const prompt = `RH Expert. Vaga: ${role}. Cultura: ${culture}. Tipo: ${type}. Crie texto.`;
+        const response = await generateWithFallback({ contents: prompt });
+        if (response.text === "ERRO_403_RESTRICTION") return "⚠️ Erro 403: Chave bloqueada.";
         return response.text || "Sem resposta.";
     } catch (error: any) {
-        if (error.message === "API_KEY_MISSING") return "API_KEY_MISSING";
         return `Erro: ${error.message}`;
     }
 };
 
-// --- MÓDULO JURÍDICO ---
 export const generateLegalDoc = async (docType: string, parties: string, details: string): Promise<string> => {
     try {
-        const prompt = `Atue como um advogado corporativo sênior. Redija um esboço de documento do tipo: "${docType}".
-        Partes envolvidas: ${parties}.
-        Detalhes específicos e cláusulas importantes: ${details}.
-        O documento deve ser formal, usar terminologia jurídica correta (em Português) e ser formatado em Markdown claro.`;
-
-        const response = await generateWithFallback({
-            contents: prompt,
-            config: {
-                systemInstruction: "Você é uma IA de assistência jurídica precisa e formal. Sempre inclua um aviso de que o documento deve ser revisado por um advogado humano.",
-            }
-        });
-        
-        if (response.text === "API_KEY_MISSING") throw new Error("API_KEY_MISSING");
+        const prompt = `Advogado Sênior. Doc: ${docType}. Partes: ${parties}. Detalhes: ${details}. Crie minuta.`;
+        const response = await generateWithFallback({ contents: prompt });
+        if (response.text === "ERRO_403_RESTRICTION") return "⚠️ Erro 403: Chave bloqueada.";
         return response.text || "Sem resposta.";
     } catch (error: any) {
-        if (error.message === "API_KEY_MISSING") return "API_KEY_MISSING";
         return `Erro: ${error.message}`;
     }
 };
 
-// --- MÓDULO PRODUTO ---
 export const generateProductSpec = async (featureName: string, userGoal: string, complexity: string): Promise<string> => {
     try {
-        const prompt = `Atue como um Product Manager (PM) de uma empresa de tecnologia.
-        Crie uma especificação de feature (PRD - Product Requirement Document) para: "${featureName}".
-        Objetivo do Usuário: "${userGoal}".
-        Complexidade Técnica estimada: "${complexity}".
-        
-        Inclua:
-        1. User Stories (Formato: Como um... Quero... Para que...)
-        2. Critérios de Aceitação
-        3. Casos de Uso (Happy Path e Edge Cases)
-        
-        Formate em Markdown.`;
-
-        const response = await generateWithFallback({
-            contents: prompt,
-            config: {
-                systemInstruction: "Você é um PM experiente focado em metodologias Ágeis e Scrum.",
-            }
-        });
-        
-        if (response.text === "API_KEY_MISSING") throw new Error("API_KEY_MISSING");
+        const prompt = `PM Senior. Feature: ${featureName}. Goal: ${userGoal}. Complexity: ${complexity}. Crie PRD.`;
+        const response = await generateWithFallback({ contents: prompt });
+        if (response.text === "ERRO_403_RESTRICTION") return "⚠️ Erro 403: Chave bloqueada.";
         return response.text || "Sem resposta.";
     } catch (error: any) {
-        if (error.message === "API_KEY_MISSING") return "API_KEY_MISSING";
         return `Erro: ${error.message}`;
     }
 };
 
-// --- MÓDULO SUPORTE ---
-export const generateSupportReply = async (customerMessage: string, tone: string): Promise<string> => {
+export const generateSupportReply = async (msg: string, tone: string): Promise<string> => {
     try {
-        const prompt = `Analise a mensagem deste cliente: "${customerMessage}".
-        
-        1. Primeiro, identifique o Sentimento (Positivo, Neutro, Negativo, Furioso).
-        2. Gere uma resposta de suporte ao cliente com o tom: "${tone}".
-        A resposta deve ser empática, resolver o problema ou dar os próximos passos claros.
-        
-        Formate a saída com o Sentimento em negrito no topo, seguido pela resposta sugerida.`;
-
-        const response = await generateWithFallback({
-            contents: prompt,
-            config: {
-                systemInstruction: "Você é um especialista em Customer Success e Suporte.",
-            }
-        });
-        
-        if (response.text === "API_KEY_MISSING") throw new Error("API_KEY_MISSING");
+        const prompt = `Suporte Cliente. Msg: ${msg}. Tom: ${tone}. Responda.`;
+        const response = await generateWithFallback({ contents: prompt });
+        if (response.text === "ERRO_403_RESTRICTION") return "⚠️ Erro 403: Chave bloqueada.";
         return response.text || "Sem resposta.";
     } catch (error: any) {
-        if (error.message === "API_KEY_MISSING") return "API_KEY_MISSING";
         return `Erro: ${error.message}`;
     }
 };
