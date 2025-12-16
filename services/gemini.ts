@@ -1,11 +1,12 @@
 import { GoogleGenAI } from "@google/genai";
 
 const getClient = () => {
-  // Acessa a chave injetada pelo Vite (via define no vite.config.ts)
+  // O Vite injeta a chave aqui durante o build (definido no vite.config.ts)
   const apiKey = process.env.API_KEY;
   
-  if (!apiKey || apiKey.includes("undefined")) {
-    console.error("CRITICAL: API Key is missing. Check Vercel Environment Variables.");
+  // Verificação de segurança simplificada
+  if (!apiKey || apiKey.length < 10) {
+    console.error("CRITICAL: API Key is invalid or missing.");
     throw new Error("API_KEY_MISSING");
   }
   
@@ -30,11 +31,11 @@ export const validateGeminiConnection = async (): Promise<{ success: boolean; me
         const errString = error.toString().toLowerCase();
 
         if (errString.includes("403") || errString.includes("permission denied")) {
-            msg = "ERRO 403: Chave bloqueada ou restrição de domínio no Google Cloud.";
+            msg = "ERRO 403: Chave bloqueada ou restrição de domínio.";
         } else if (errString.includes("key") || errString.includes("api key") || errString.includes("missing")) {
-            msg = "Chave de API Inválida ou Não Configurada no Vercel.";
-        } else if (errString.includes("429") || errString.includes("quota")) {
-            msg = "Limite de Quota Excedido (Erro 429).";
+            msg = "Chave de API Inválida.";
+        } else if (errString.includes("429")) {
+            msg = "Limite de Quota Excedido.";
         } else {
             msg = `Erro: ${error.message || error.toString()}`;
         }
@@ -46,7 +47,6 @@ export const validateGeminiConnection = async (): Promise<{ success: boolean; me
 const generateWithFallback = async (params: any) => {
     try {
         const ai = getClient();
-        // Utiliza o modelo padrão recomendado
         const response = await ai.models.generateContent({
             model: 'gemini-2.5-flash',
             ...params
@@ -55,8 +55,9 @@ const generateWithFallback = async (params: any) => {
 
     } catch (error: any) {
         console.error("Gemini Generate Error:", error);
-        
         const errStr = error.toString();
+        
+        // Retorna strings de erro específicas para tratamento na UI
         if (errStr.includes("403")) return { text: "ERRO_403_RESTRICTION" };
         if (errStr.includes("API key") || errStr.includes("MISSING")) return { text: "API_KEY_INVALID" };
         
@@ -69,8 +70,8 @@ export const generateMarketingContent = async (topic: string, platform: string):
     const prompt = `Crie um post para o ${platform} sobre: "${topic}". Seja curto, viral e profissional. Formato Markdown.`;
     const response = await generateWithFallback({ contents: prompt });
 
-    if (response.text === "ERRO_403_RESTRICTION") return "⚠️ Erro 403: Chave bloqueada. Verifique restrições de domínio no Google Cloud Console.";
-    if (response.text === "API_KEY_INVALID") return "⚠️ Erro de Configuração: Variável API_KEY não encontrada no Vercel.";
+    if (response.text === "ERRO_403_RESTRICTION") return "⚠️ Erro 403: Chave bloqueada. Verifique restrições.";
+    if (response.text === "API_KEY_INVALID") return "⚠️ Erro de Configuração: API Key inválida.";
     if (!response.text) throw new Error("Resposta vazia da IA.");
 
     return response.text;

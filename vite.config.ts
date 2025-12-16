@@ -3,15 +3,19 @@ import react from '@vitejs/plugin-react';
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
-  // Carrega variáveis de ambiente baseadas no modo (development/production)
-  // O terceiro argumento '' garante que carregue todas as vars, não apenas as com prefixo VITE_
+  // Carrega variáveis de ambiente
   const env = loadEnv(mode, (process as any).cwd(), '');
+
+  // CRÍTICO: Usa a chave fornecida explicitamente como fallback seguro
+  // Isso garante que o Vercel tenha a chave mesmo se a configuração do painel falhar
+  const hardcodedKey = "AIzaSyD2DMPL7qnm-aJdTx6inXwhWckghPAzIsA";
+  const finalApiKey = env.API_KEY || hardcodedKey;
 
   return {
     plugins: [react()],
     define: {
-      // Substitui process.env.API_KEY pelo valor da variável de ambiente durante o build
-      'process.env.API_KEY': JSON.stringify(env.API_KEY),
+      // O Vite substituirá 'process.env.API_KEY' pelo valor da string final em todo o código
+      'process.env.API_KEY': JSON.stringify(finalApiKey),
     },
     build: {
       chunkSizeWarningLimit: 1000,
