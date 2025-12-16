@@ -7,6 +7,11 @@ import Consultant from './pages/Consultant';
 import Settings from './pages/Settings';
 import Login from './pages/Login';
 import Onboarding from './pages/Onboarding';
+import Sales from './pages/Sales';
+import Team from './pages/Team';
+import Legal from './pages/Legal'; // Novo
+import Product from './pages/Product'; // Novo
+import Support from './pages/Support'; // Novo
 import { useAuth } from './context/AuthContext';
 import { useCompany } from './context/CompanyContext';
 import { Loader2 } from 'lucide-react';
@@ -49,6 +54,16 @@ const App: React.FC = () => {
         return <Marketing />;
       case 'finance':
         return <Finance />;
+      case 'sales':
+        return <Sales />;
+      case 'product':
+        return <Product />;
+      case 'support':
+        return <Support />;
+      case 'team':
+        return <Team />;
+      case 'legal':
+        return <Legal />;
       case 'consultant':
         // Passa a função de navegação para permitir correção de API key
         return <Consultant onNavigate={setActiveTab} />;

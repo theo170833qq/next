@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { LayoutGrid, TrendingUp, Sparkles, MessageSquareText, Settings, Wifi, WifiOff } from 'lucide-react';
+import { LayoutGrid, TrendingUp, Sparkles, MessageSquareText, Settings, Wifi, WifiOff, PhoneCall, Users2, Scale, LifeBuoy, Code2 } from 'lucide-react';
 import { checkDatabaseConnection } from '../services/supabase';
 import { useCompany } from '../context/CompanyContext';
 import { useAuth } from '../context/AuthContext';
@@ -31,6 +31,11 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => {
     { id: 'dashboard', label: 'Dashboard', icon: LayoutGrid },
     { id: 'finance', label: 'Finanças', icon: TrendingUp },
     { id: 'marketing', label: 'Creator', icon: Sparkles },
+    { id: 'sales', label: 'Vendas', icon: PhoneCall },
+    { id: 'product', label: 'Produto & Tech', icon: Code2 }, // Novo
+    { id: 'support', label: 'Suporte & CS', icon: LifeBuoy }, // Novo
+    { id: 'team', label: 'Talentos', icon: Users2 },
+    { id: 'legal', label: 'Jurídico', icon: Scale }, // Novo
     { id: 'consultant', label: 'Advisor', icon: MessageSquareText },
   ];
   
@@ -68,7 +73,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => {
           </div>
 
           {/* Navigation */}
-          <nav className="mt-4 px-4 space-y-3">
+          <nav className="mt-2 px-4 space-y-1.5 overflow-y-auto max-h-[calc(100vh-250px)] custom-scrollbar">
             {menuItems.map((item) => {
               const Icon = item.icon;
               const isActive = activeTab === item.id;
@@ -79,7 +84,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => {
                 <button
                   key={item.id}
                   onClick={() => setActiveTab(item.id)}
-                  className={`w-full flex items-center p-4 rounded-2xl transition-all duration-300 group relative overflow-hidden ${
+                  className={`w-full flex items-center p-3 rounded-2xl transition-all duration-300 group relative overflow-hidden ${
                     isActive 
                       ? 'bg-gradient-to-r from-indigo-600/20 to-purple-600/10 text-white shadow-lg shadow-indigo-900/20 border border-white/10' 
                       : 'text-gray-400 hover:text-white hover:bg-white/5'
@@ -88,8 +93,8 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => {
                   {isActive && (
                     <div className="absolute left-0 top-0 h-full w-1 bg-indigo-500 rounded-r-full shadow-[0_0_10px_#6366f1]"></div>
                   )}
-                  <Icon size={24} className={`transition-colors ${isActive ? 'text-indigo-400' : 'group-hover:text-indigo-300'}`} />
-                  <span className="ml-4 font-semibold text-lg tracking-wide">{label}</span>
+                  <Icon size={20} className={`transition-colors ${isActive ? 'text-indigo-400' : 'group-hover:text-indigo-300'}`} />
+                  <span className="ml-4 font-semibold text-sm tracking-wide">{label}</span>
                 </button>
               );
             })}
@@ -119,20 +124,20 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => {
               </div>
             </div>
             <div className="ml-3 text-left overflow-hidden">
-              <p className={`text-base font-bold truncate transition-colors ${activeTab === 'settings' ? 'text-indigo-300' : 'text-white group-hover:text-indigo-300'}`}>
+              <p className={`text-sm font-bold truncate transition-colors ${activeTab === 'settings' ? 'text-indigo-300' : 'text-white group-hover:text-indigo-300'}`}>
                   {companyData?.userName || 'Usuário'}
               </p>
-              <p className="text-xs text-gray-500 font-medium truncate">
+              <p className="text-[10px] text-gray-500 font-medium truncate">
                   {companyData?.companyName || 'Configurações'}
               </p>
             </div>
-            <Settings size={20} className={`ml-auto text-gray-500 group-hover:rotate-90 transition-transform ${activeTab === 'settings' ? 'text-indigo-400 rotate-90' : ''}`} />
+            <Settings size={18} className={`ml-auto text-gray-500 group-hover:rotate-90 transition-transform ${activeTab === 'settings' ? 'text-indigo-400 rotate-90' : ''}`} />
           </button>
         </div>
       </aside>
 
       {/* Mobile Bottom Navigation - Otimizada */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 h-16 glass-panel border-t border-white/10 z-50 px-2 pb-1 pt-1 flex items-center justify-between backdrop-blur-xl bg-onyx-900/80">
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 h-16 glass-panel border-t border-white/10 z-50 px-2 pb-1 pt-1 flex items-center justify-between backdrop-blur-xl bg-onyx-900/80 overflow-x-auto">
          {menuItems.map((item) => {
             const Icon = item.icon;
             const isActive = activeTab === item.id;
@@ -140,23 +145,23 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => {
                <button
                   key={item.id}
                   onClick={() => setActiveTab(item.id)}
-                  className={`flex flex-col items-center justify-center p-1 rounded-xl transition-all w-16 ${isActive ? 'text-indigo-400' : 'text-gray-500 hover:text-gray-300'}`}
+                  className={`flex flex-col items-center justify-center p-1 rounded-xl transition-all min-w-[60px] ${isActive ? 'text-indigo-400' : 'text-gray-500 hover:text-gray-300'}`}
                >
                   <div className={`p-1 rounded-full mb-0.5 transition-all ${isActive ? 'bg-indigo-500/20 translate-y-[-2px]' : 'bg-transparent'}`}>
-                     <Icon size={20} className={isActive ? 'text-indigo-400' : 'text-gray-400'} />
+                     <Icon size={18} className={isActive ? 'text-indigo-400' : 'text-gray-400'} />
                   </div>
-                  <span className="text-[10px] font-medium tracking-tight">{item.label}</span>
+                  <span className="text-[9px] font-medium tracking-tight">{item.label}</span>
                </button>
             )
          })}
          <button
             onClick={() => setActiveTab('settings')}
-            className={`flex flex-col items-center justify-center p-1 rounded-xl transition-all w-16 ${activeTab === 'settings' ? 'text-indigo-400' : 'text-gray-500 hover:text-gray-300'}`}
+            className={`flex flex-col items-center justify-center p-1 rounded-xl transition-all min-w-[60px] ${activeTab === 'settings' ? 'text-indigo-400' : 'text-gray-500 hover:text-gray-300'}`}
          >
              <div className={`p-1 rounded-full mb-0.5 transition-all ${activeTab === 'settings' ? 'bg-indigo-500/20 translate-y-[-2px]' : 'bg-transparent'}`}>
-                <Settings size={20} className={activeTab === 'settings' ? 'text-indigo-400' : 'text-gray-400'} />
+                <Settings size={18} className={activeTab === 'settings' ? 'text-indigo-400' : 'text-gray-400'} />
              </div>
-             <span className="text-[10px] font-medium tracking-tight">Ajustes</span>
+             <span className="text-[9px] font-medium tracking-tight">Ajustes</span>
          </button>
       </nav>
     </>
