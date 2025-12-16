@@ -27,16 +27,17 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => {
     return () => clearInterval(interval);
   }, []);
 
+  // Nomenclatura simples e direta em Português
   const menuItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: LayoutGrid },
-    { id: 'finance', label: 'Finanças', icon: TrendingUp },
-    { id: 'marketing', label: 'Creator', icon: Sparkles },
+    { id: 'dashboard', label: 'Visão Geral', icon: LayoutGrid },
+    { id: 'finance', label: 'Financeiro', icon: TrendingUp },
+    { id: 'marketing', label: 'Marketing', icon: Sparkles },
     { id: 'sales', label: 'Vendas', icon: PhoneCall },
-    { id: 'product', label: 'Produto & Tech', icon: Code2 }, // Novo
-    { id: 'support', label: 'Suporte & CS', icon: LifeBuoy }, // Novo
-    { id: 'team', label: 'Talentos', icon: Users2 },
-    { id: 'legal', label: 'Jurídico', icon: Scale }, // Novo
-    { id: 'consultant', label: 'Advisor', icon: MessageSquareText },
+    { id: 'product', label: 'Produtos', icon: Code2 },
+    { id: 'support', label: 'Suporte', icon: LifeBuoy },
+    { id: 'team', label: 'Equipe', icon: Users2 },
+    { id: 'legal', label: 'Jurídico', icon: Scale },
+    { id: 'consultant', label: 'Consultor IA', icon: MessageSquareText },
   ];
   
   const avatarSeed = companyData?.userName || user?.email || 'NextUser';
@@ -77,8 +78,6 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => {
             {menuItems.map((item) => {
               const Icon = item.icon;
               const isActive = activeTab === item.id;
-              // Ajuste de label para desktop
-              const label = item.id === 'marketing' ? 'Creator Studio' : item.id === 'consultant' ? 'Next Advisor' : item.label;
               
               return (
                 <button
@@ -94,7 +93,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => {
                     <div className="absolute left-0 top-0 h-full w-1 bg-indigo-500 rounded-r-full shadow-[0_0_10px_#6366f1]"></div>
                   )}
                   <Icon size={20} className={`transition-colors ${isActive ? 'text-indigo-400' : 'group-hover:text-indigo-300'}`} />
-                  <span className="ml-4 font-semibold text-sm tracking-wide">{label}</span>
+                  <span className="ml-4 font-semibold text-sm tracking-wide">{item.label}</span>
                 </button>
               );
             })}
@@ -141,6 +140,19 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => {
          {menuItems.map((item) => {
             const Icon = item.icon;
             const isActive = activeTab === item.id;
+            // Versão curta para mobile
+            const shortLabels: {[key:string]: string} = {
+                dashboard: 'Início',
+                finance: 'Finanças',
+                marketing: 'Mkt',
+                sales: 'Vendas',
+                product: 'Prod',
+                support: 'Suporte',
+                team: 'Equipe',
+                legal: 'Jurídico',
+                consultant: 'IA'
+            };
+
             return (
                <button
                   key={item.id}
@@ -150,7 +162,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => {
                   <div className={`p-1 rounded-full mb-0.5 transition-all ${isActive ? 'bg-indigo-500/20 translate-y-[-2px]' : 'bg-transparent'}`}>
                      <Icon size={18} className={isActive ? 'text-indigo-400' : 'text-gray-400'} />
                   </div>
-                  <span className="text-[9px] font-medium tracking-tight">{item.label}</span>
+                  <span className="text-[9px] font-medium tracking-tight">{shortLabels[item.id] || item.label}</span>
                </button>
             )
          })}
