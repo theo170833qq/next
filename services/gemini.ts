@@ -1,53 +1,66 @@
 import { GoogleGenAI, Type } from "@google/genai";
 
 const getClient = () => {
-  // 1. TENTA CHAVE DO LOCALSTORAGE (Prioridade Máxima para correções manuais)
+  // 1. TENTA CHAVE DO LOCALSTORAGE (Prioridade Máxima para correções manuais pelo usuário)
   const localKey = localStorage.getItem('user_custom_api_key');
   if (localKey && localKey.length > 20) {
       return new GoogleGenAI({ apiKey: localKey });
   }
 
-  // 2. CHAVE FORNECIDA PELO USUÁRIO (Hardcoded)
-  // Força o uso desta chave específica ignorando process.env para evitar conflitos
-  const HARDCODED_KEY = "AIzaSyBYtDLsP6BJ4LnrTc_1CEAgkFj5_jwuHGg";
+  // 2. TENTA CHAVE DE AMBIENTE (Do Deploy/Vercel)
+  // O Vite injeta isso via 'define' no vite.config.ts
+  const envKey = process.env.API_KEY;
   
-  return new GoogleGenAI({ apiKey: HARDCODED_KEY });
+  if (envKey && envKey.length > 20) {
+    return new GoogleGenAI({ apiKey: envKey });
+  }
+  
+  // Se não houver chave, retorna uma instância que falhará graciosamente depois
+  // ou lança um erro que a UI vai capturar para pedir a chave ao usuário
+  throw new Error("API_KEY_MISSING");
 };
 
 // Sistema de Fallback em Cascata
 const generateWithFallback = async (params: any) => {
-    const ai = getClient();
-    
-    // Tenta modelos mais antigos/estáveis primeiro se o Flash falhar
-    const models = [
-        'gemini-2.5-flash',
-        'gemini-1.5-flash',
-        'gemini-1.5-flash-latest' 
-    ];
+    try {
+        const ai = getClient();
+        
+        // Tenta modelos mais antigos/estáveis primeiro se o Flash falhar
+        const models = [
+            'gemini-2.5-flash',
+            'gemini-1.5-flash',
+            'gemini-1.5-flash-latest' 
+        ];
 
-    let lastError = null;
+        let lastError = null;
 
-    for (const model of models) {
-        try {
-            console.log(`🚀 Tentando conectar com modelo: ${model}...`);
-            const response = await ai.models.generateContent({
-                ...params,
-                model: model
-            });
-            console.log(`✅ Sucesso com ${model}`);
-            return response;
-        } catch (error: any) {
-            console.warn(`⚠️ Falha no modelo ${model}: ${error.message}`);
-            lastError = error;
-            
-            // Se for erro de chave inválida, para imediatamente e avisa o usuário
-            if (error.message?.includes('API key') || error.message?.includes('403')) {
-                throw new Error("API_KEY_INVALID");
+        for (const model of models) {
+            try {
+                console.log(`🚀 Tentando conectar com modelo: ${model}...`);
+                const response = await ai.models.generateContent({
+                    ...params,
+                    model: model
+                });
+                console.log(`✅ Sucesso com ${model}`);
+                return response;
+            } catch (error: any) {
+                console.warn(`⚠️ Falha no modelo ${model}: ${error.message}`);
+                lastError = error;
+                
+                // Se for erro de chave inválida, para imediatamente e avisa o usuário
+                if (error.message?.includes('API key') || error.message?.includes('403')) {
+                    throw new Error("API_KEY_INVALID");
+                }
             }
         }
-    }
+        throw lastError;
 
-    throw lastError;
+    } catch (error: any) {
+        if (error.message === "API_KEY_MISSING") {
+             throw new Error("API_KEY_INVALID"); // Trata missing como invalid para disparar UI de configuração
+        }
+        throw error;
+    }
 };
 
 export const generateMarketingContent = async (topic: string, platform: string): Promise<string> => {
@@ -77,7 +90,7 @@ export const generateMarketingContent = async (topic: string, platform: string):
   } catch (error: any) {
     console.error("Erro no Marketing Generator:", error);
     if (error.message === "API_KEY_INVALID" || error.message?.includes("API key")) {
-        return "⚠️ **Erro de Chave**: A chave de API atual é inválida. Por favor, vá em Configurações e insira uma nova chave.";
+        return "⚠️ **Configuração Necessária**: Não foi encontrada uma chave de API válida. Por favor, vá em **Ajustes > Sistema & API** e insira sua chave Google Gemini.";
     }
     return `Erro de IA: ${error.message || "Serviço indisponível no momento."}`;
   }
@@ -118,8 +131,8 @@ export const analyzeFinancialData = async (dataContext: string): Promise<any> =>
     return JSON.parse(jsonString);
   } catch (error: any) {
     console.error("Erro na análise financeira:", error);
-    const msg = error.message === "API_KEY_INVALID" 
-        ? "Chave de API inválida. Configure uma nova em Ajustes." 
+    const msg = (error.message === "API_KEY_INVALID" || error.message?.includes("API key"))
+        ? "Chave de API inválida ou ausente. Configure em Ajustes." 
         : "Não foi possível conectar à IA.";
         
     return { 
@@ -170,7 +183,7 @@ export const generateSalesStrategy = async (product: string, target: string, typ
         });
         return response.text || "Sem resposta.";
     } catch (error: any) {
-        if (error.message === "API_KEY_INVALID") return "⚠️ **Erro de Chave**: Verifique suas configurações.";
+        if (error.message === "API_KEY_INVALID" || error.message?.includes("API key")) return "⚠️ **Erro de Chave**: Verifique suas configurações.";
         return `Erro: ${error.message}`;
     }
 };
@@ -193,7 +206,7 @@ export const generateHRContent = async (role: string, culture: string, type: 'jo
         });
         return response.text || "Sem resposta.";
     } catch (error: any) {
-        if (error.message === "API_KEY_INVALID") return "⚠️ **Erro de Chave**: Verifique suas configurações.";
+        if (error.message === "API_KEY_INVALID" || error.message?.includes("API key")) return "⚠️ **Erro de Chave**: Verifique suas configurações.";
         return `Erro: ${error.message}`;
     }
 };
@@ -214,7 +227,7 @@ export const generateLegalDoc = async (docType: string, parties: string, details
         });
         return response.text || "Sem resposta.";
     } catch (error: any) {
-        if (error.message === "API_KEY_INVALID") return "⚠️ **Erro de Chave**: Verifique suas configurações.";
+        if (error.message === "API_KEY_INVALID" || error.message?.includes("API key")) return "⚠️ **Erro de Chave**: Verifique suas configurações.";
         return `Erro: ${error.message}`;
     }
 };
@@ -242,7 +255,7 @@ export const generateProductSpec = async (featureName: string, userGoal: string,
         });
         return response.text || "Sem resposta.";
     } catch (error: any) {
-        if (error.message === "API_KEY_INVALID") return "⚠️ **Erro de Chave**: Verifique suas configurações.";
+        if (error.message === "API_KEY_INVALID" || error.message?.includes("API key")) return "⚠️ **Erro de Chave**: Verifique suas configurações.";
         return `Erro: ${error.message}`;
     }
 };
@@ -266,7 +279,7 @@ export const generateSupportReply = async (customerMessage: string, tone: string
         });
         return response.text || "Sem resposta.";
     } catch (error: any) {
-        if (error.message === "API_KEY_INVALID") return "⚠️ **Erro de Chave**: Verifique suas configurações.";
+        if (error.message === "API_KEY_INVALID" || error.message?.includes("API key")) return "⚠️ **Erro de Chave**: Verifique suas configurações.";
         return `Erro: ${error.message}`;
     }
 };

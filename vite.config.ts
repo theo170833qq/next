@@ -5,16 +5,13 @@ import react from '@vitejs/plugin-react';
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, (process as any).cwd(), '');
 
-  // Chave Fixa para garantir deploy no Vercel sem configuração extra
-  const fixedApiKey = "AIzaSyBYtDLsP6BJ4LnrTc_1CEAgkFj5_jwuHGg";
-
-  // Ordem de prioridade
+  // Ordem de prioridade para capturar a chave de API do ambiente de Deploy
   const rawApiKey = 
     env.API_KEY || 
     env.VITE_API_KEY || 
     env.GOOGLE_API_KEY || 
     env.NEXT_PUBLIC_API_KEY || 
-    fixedApiKey;
+    ""; // Fallback vazio para evitar erro de build se não houver chave
 
   // Limpeza da chave
   const apiKey = rawApiKey.replace(/["']/g, "").trim();
