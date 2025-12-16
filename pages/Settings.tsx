@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { User, Bell, Shield, Save, Loader2, LogOut, CreditCard, Server, Wifi, CheckCircle2, XCircle, RefreshCw, Trash2, Bot } from 'lucide-react';
+import { User, Bell, Shield, Save, Loader2, LogOut, CreditCard, Server, Wifi, CheckCircle2, XCircle, RefreshCw, Trash2, Bot, AlertTriangle } from 'lucide-react';
 import { checkDatabaseConnection } from '../services/supabase';
+import { validateGeminiConnection } from '../services/gemini';
 import { useAuth } from '../context/AuthContext';
 import { useCompany } from '../context/CompanyContext';
 
@@ -9,8 +10,14 @@ const Settings: React.FC = () => {
   const { companyData, clearCompanyData } = useCompany();
   const [loading, setLoading] = useState(false);
   const [activeSection, setActiveSection] = useState('profile');
+  
+  // States de Status
   const [dbStatus, setDbStatus] = useState<'checking' | 'online' | 'offline'>('checking');
-  const [latency, setLatency] = useState(0);
+  const [dbLatency, setDbLatency] = useState(0);
+  
+  const [aiStatus, setAiStatus] = useState<'checking' | 'valid' | 'invalid'>('checking');
+  const [aiMessage, setAiMessage] = useState('');
+  const [aiLatency, setAiLatency] = useState(0);
   
   const [notificationState, setNotificationState] = useState({
     email: true,
@@ -26,17 +33,23 @@ const Settings: React.FC = () => {
 
   const runSystemCheck = async () => {
     setDbStatus('checking');
-    const result = await checkDatabaseConnection();
-    setTimeout(() => {
-        setDbStatus(result.status);
-        setLatency(result.latency);
-    }, 800);
+    setAiStatus('checking');
+    setAiMessage('Testando chave...');
+    
+    // DB Check
+    const dbResult = await checkDatabaseConnection();
+    setDbStatus(dbResult.status);
+    setDbLatency(dbResult.latency);
+
+    // AI Check
+    const aiResult = await validateGeminiConnection();
+    setAiStatus(aiResult.success ? 'valid' : 'invalid');
+    setAiMessage(aiResult.message);
+    setAiLatency(aiResult.latency);
   };
 
   const handleSave = () => {
     setLoading(true);
-    
-    // Simulação de salvamento de outras preferências
     setTimeout(() => {
       setLoading(false);
       alert("Configurações salvas e aplicadas com sucesso!");
@@ -166,7 +179,7 @@ const Settings: React.FC = () => {
                                 className="p-2 bg-white/5 rounded-full hover:bg-white/10 transition-colors text-gray-400 hover:text-white"
                                 title="Executar diagnóstico"
                             >
-                                <RefreshCw size={16} className={dbStatus === 'checking' ? 'animate-spin' : ''} />
+                                <RefreshCw size={16} className={dbStatus === 'checking' || aiStatus === 'checking' ? 'animate-spin' : ''} />
                             </button>
                         </div>
 
@@ -187,15 +200,15 @@ const Settings: React.FC = () => {
                                     {dbStatus === 'checking' && <span className="text-xs text-yellow-400 flex items-center"><Loader2 size={12} className="animate-spin mr-1"/> Verificando...</span>}
                                     {dbStatus === 'online' && <span className="text-xs text-emerald-400 flex items-center font-bold"><CheckCircle2 size={12} className="mr-1"/> Operacional</span>}
                                     {dbStatus === 'offline' && <span className="text-xs text-red-400 flex items-center font-bold"><XCircle size={12} className="mr-1"/> Erro de Conexão</span>}
-                                    {dbStatus === 'online' && <span className="text-[10px] text-gray-600 mt-1">{latency}ms latência</span>}
+                                    {dbStatus === 'online' && <span className="text-[10px] text-gray-600 mt-1">{dbLatency}ms latência</span>}
                                 </div>
                             </div>
 
-                            {/* AI Engine Status Block - Always Active due to hardcoded key */}
+                            {/* AI Engine Status Block - Now with REAL Validation */}
                             <div className="p-4 rounded-xl bg-onyx-950 border border-white/5 flex items-center justify-between">
                                 <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 rounded-full flex items-center justify-center bg-blue-500/10">
-                                        <Bot size={18} className="text-blue-400" />
+                                    <div className={`w-10 h-10 rounded-full flex items-center justify-center ${aiStatus === 'valid' ? 'bg-blue-500/10' : aiStatus === 'invalid' ? 'bg-red-500/10' : 'bg-gray-500/10'}`}>
+                                        <Bot size={18} className={aiStatus === 'valid' ? 'text-blue-400' : aiStatus === 'invalid' ? 'text-red-400' : 'text-gray-400'} />
                                     </div>
                                     <div>
                                         <p className="text-sm font-bold text-white">Google Gemini AI</p>
@@ -204,10 +217,29 @@ const Settings: React.FC = () => {
                                 </div>
                                 
                                 <div className="flex flex-col items-end">
-                                    <span className="text-xs text-emerald-400 flex items-center font-bold"><CheckCircle2 size={12} className="mr-1"/> Conectado</span>
-                                    <span className="text-[10px] text-gray-600 mt-1">Chave Enterprise Ativa</span>
+                                    {aiStatus === 'checking' && <span className="text-xs text-yellow-400 flex items-center"><Loader2 size={12} className="animate-spin mr-1"/> Testando Chave...</span>}
+                                    
+                                    {aiStatus === 'valid' && (
+                                        <>
+                                            <span className="text-xs text-emerald-400 flex items-center font-bold"><CheckCircle2 size={12} className="mr-1"/> {aiMessage}</span>
+                                            <span className="text-[10px] text-gray-600 mt-1">{aiLatency}ms resposta</span>
+                                        </>
+                                    )}
+
+                                    {aiStatus === 'invalid' && (
+                                        <>
+                                            <span className="text-xs text-red-400 flex items-center font-bold"><AlertTriangle size={12} className="mr-1"/> {aiMessage}</span>
+                                            <span className="text-[10px] text-gray-500 mt-1">Verifique a API Key no código</span>
+                                        </>
+                                    )}
                                 </div>
                             </div>
+                        </div>
+                        
+                        <div className="mt-4 p-3 bg-white/5 rounded-xl border border-white/5">
+                             <p className="text-[10px] text-gray-400 font-mono break-all">
+                                <strong className="text-gray-300">Chave em Uso:</strong> {process.env.API_KEY ? `...${process.env.API_KEY.slice(-6)}` : 'Usando Hardcoded Fallback'}
+                             </p>
                         </div>
                     </div>
                 </div>
