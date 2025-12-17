@@ -6,16 +6,13 @@ export default defineConfig(({ mode }) => {
   // Carrega variáveis de ambiente
   const env = loadEnv(mode, (process as any).cwd(), '');
 
-  // Chave fornecida pelo usuário como fallback prioritário
-  const hardcodedKey = "AIzaSyD2DMPL7qnm-aJdTx6inXwhWckghPAzIsA";
-  
-  // Lógica: Usa a do Vercel (env) se existir, senão usa a hardcoded
-  const finalApiKey = env.API_KEY || hardcodedKey;
+  // CHAVE REAL FORNECIDA PELO USUÁRIO
+  const finalApiKey = "AIzaSyD2DMPL7qnm-aJdTx6inXwhWckghPAzIsA";
 
   return {
     plugins: [react()],
     define: {
-      // Injeção segura da variável para o client-side
+      // Injeção direta da chave
       'process.env.API_KEY': JSON.stringify(finalApiKey),
     },
     build: {
