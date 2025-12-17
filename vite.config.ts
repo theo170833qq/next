@@ -6,15 +6,16 @@ export default defineConfig(({ mode }) => {
   // Carrega variáveis de ambiente
   const env = loadEnv(mode, (process as any).cwd(), '');
 
-  // CRÍTICO: Usa a chave fornecida explicitamente como fallback seguro
-  // Isso garante que o Vercel tenha a chave mesmo se a configuração do painel falhar
+  // Chave fornecida pelo usuário como fallback prioritário
   const hardcodedKey = "AIzaSyD2DMPL7qnm-aJdTx6inXwhWckghPAzIsA";
+  
+  // Lógica: Usa a do Vercel (env) se existir, senão usa a hardcoded
   const finalApiKey = env.API_KEY || hardcodedKey;
 
   return {
     plugins: [react()],
     define: {
-      // O Vite substituirá 'process.env.API_KEY' pelo valor da string final em todo o código
+      // Injeção segura da variável para o client-side
       'process.env.API_KEY': JSON.stringify(finalApiKey),
     },
     build: {
