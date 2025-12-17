@@ -1,5 +1,5 @@
 import React, { createContext, useState, useEffect, useContext, PropsWithChildren } from 'react';
-import { supabase } from '../services/supabase';
+import { supabase, isSupabaseConfigured } from '../services/supabase';
 import { Session, User } from '@supabase/supabase-js';
 
 interface AuthContextType {
@@ -22,14 +22,25 @@ export const AuthProvider: React.FC<PropsWithChildren> = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Busca a sessão inicial
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
+    // Se não houver configuração, não tenta conectar para evitar erro de rede
+    if (!isSupabaseConfigured()) {
+      console.warn("Supabase não configurado. Modo offline/demo ativado.");
+      setLoading(false);
+      return;
+    }
+
+    // Busca a sessão inicial com tratamento de erro
+    supabase.auth.getSession().then(({ data, error }) => {
+      if (!error && data) {
+        setSession(data.session);
+        setUser(data.session?.user ?? null);
+      }
+      setLoading(false);
+    }).catch(err => {
+      console.error("Erro fatal ao inicializar Auth:", err);
       setLoading(false);
     });
 
-    // Escuta mudanças no estado de autenticação (Login, Logout, Auto-refresh)
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
       setUser(session?.user ?? null);
@@ -40,7 +51,11 @@ export const AuthProvider: React.FC<PropsWithChildren> = ({ children }) => {
   }, []);
 
   const signOut = async () => {
-    await supabase.auth.signOut();
+    if (isSupabaseConfigured()) {
+        await supabase.auth.signOut();
+    }
+    setUser(null);
+    setSession(null);
   };
 
   return (

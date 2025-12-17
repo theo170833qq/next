@@ -1,21 +1,34 @@
 import { createClient } from '@supabase/supabase-js';
 
-// Configuração do Supabase com as credenciais fornecidas
-const supabaseUrl = 'https://ffgoqeturuyhaqtxztga.supabase.co';
-const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZmZ29xZXR1cnV5aGFxdHh6dGdhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU3Mzc5NjEsImV4cCI6MjA4MTMxMzk2MX0.SQOvk1uJzdazQjObBbwLhZxBCOYtMmsZjnWcMBxd3gI';
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-// Cria o cliente Supabase
-export const supabase = createClient(supabaseUrl, supabaseKey);
-
-export const isSupabaseConfigured = (): boolean => {
-  return !!supabase;
+// Verificação de segurança para evitar crash na inicialização
+const isValidUrl = (url: string | undefined) => {
+  try {
+    return url && new URL(url);
+  } catch (_) {
+    return false;
+  }
 };
 
-// Testa a conexão real com o Supabase
+// Usa valores fallback seguros se as envs não existirem
+const finalUrl = isValidUrl(supabaseUrl) ? supabaseUrl : 'https://placeholder.supabase.co';
+const finalKey = supabaseKey || 'placeholder-key';
+
+export const supabase = createClient(finalUrl, finalKey);
+
+export const isSupabaseConfigured = (): boolean => {
+  return isValidUrl(supabaseUrl) && !!supabaseKey && supabaseUrl !== 'https://placeholder.supabase.co';
+};
+
 export const checkDatabaseConnection = async (): Promise<{ status: 'online' | 'offline', latency: number }> => {
+  if (!isSupabaseConfigured()) {
+     return { status: 'offline', latency: 0 };
+  }
+
   const start = performance.now();
   try {
-    // Tenta uma operação leve (verificar sessão) para validar a conexão com a API Gateway
     const { error } = await supabase.auth.getSession();
     const end = performance.now();
     
@@ -28,11 +41,7 @@ export const checkDatabaseConnection = async (): Promise<{ status: 'online' | 'o
   }
 };
 
-// Função auxiliar para salvar métricas (exemplo de uso do DB)
 export const saveBusinessMetric = async (metric: any) => {
-  if (!supabase) return { error: "Supabase not configured" };
-  
-  // Exemplo de insert seguro
-  // Certifique-se de criar a tabela 'business_metrics' no seu painel do Supabase
+  if (!isSupabaseConfigured()) return { error: "Supabase not configured" };
   return await supabase.from('business_metrics').insert(metric);
 };
