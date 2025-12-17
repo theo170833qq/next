@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { User, Bell, Shield, Save, Loader2, LogOut, CreditCard, Server, Wifi, CheckCircle2, XCircle, RefreshCw, Trash2, Bot, AlertTriangle } from 'lucide-react';
+import { User, Bell, Shield, Save, Loader2, LogOut, CreditCard, Server, Wifi, CheckCircle2, XCircle, RefreshCw, Trash2, Bot, AlertTriangle, Key } from 'lucide-react';
 import { checkDatabaseConnection } from '../services/supabase';
 import { validateGeminiConnection } from '../services/gemini';
 import { useAuth } from '../context/AuthContext';
@@ -18,12 +18,6 @@ const Settings: React.FC = () => {
   const [aiStatus, setAiStatus] = useState<'checking' | 'valid' | 'invalid'>('checking');
   const [aiMessage, setAiMessage] = useState('');
   const [aiLatency, setAiLatency] = useState(0);
-  
-  const [notificationState, setNotificationState] = useState({
-    email: true,
-    push: false,
-    marketing: true
-  });
 
   useEffect(() => {
     if (activeSection === 'api') {
@@ -69,8 +63,8 @@ const Settings: React.FC = () => {
 
   const sections = [
     { id: 'profile', label: 'Perfil', icon: User },
-    { id: 'notifications', label: 'Notificações', icon: Bell },
     { id: 'api', label: 'Status do Sistema', icon: Server },
+    { id: 'notifications', label: 'Notificações', icon: Bell },
     { id: 'security', label: 'Segurança', icon: Shield },
     { id: 'billing', label: 'Assinatura', icon: CreditCard },
   ];
@@ -212,12 +206,12 @@ const Settings: React.FC = () => {
                                     </div>
                                     <div>
                                         <p className="text-sm font-bold text-white">Google Gemini AI</p>
-                                        <p className="text-xs text-gray-500">Motor de Inteligência Generativa</p>
+                                        <p className="text-xs text-gray-500">Motor Generativo (Hardcoded Key)</p>
                                     </div>
                                 </div>
                                 
                                 <div className="flex flex-col items-end">
-                                    {aiStatus === 'checking' && <span className="text-xs text-yellow-400 flex items-center"><Loader2 size={12} className="animate-spin mr-1"/> Testando Chave...</span>}
+                                    {aiStatus === 'checking' && <span className="text-xs text-yellow-400 flex items-center"><Loader2 size={12} className="animate-spin mr-1"/> Validando...</span>}
                                     
                                     {aiStatus === 'valid' && (
                                         <>
@@ -229,16 +223,17 @@ const Settings: React.FC = () => {
                                     {aiStatus === 'invalid' && (
                                         <>
                                             <span className="text-xs text-red-400 flex items-center font-bold"><AlertTriangle size={12} className="mr-1"/> {aiMessage}</span>
-                                            <span className="text-[10px] text-gray-500 mt-1">Verifique a API Key no código</span>
+                                            <span className="text-[10px] text-gray-500 mt-1">Verifique o console para logs</span>
                                         </>
                                     )}
                                 </div>
                             </div>
                         </div>
                         
-                        <div className="mt-4 p-3 bg-white/5 rounded-xl border border-white/5">
-                             <p className="text-[10px] text-gray-400 font-mono break-all">
-                                <strong className="text-gray-300">Chave em Uso:</strong> {process.env.API_KEY ? `...${process.env.API_KEY.slice(-6)}` : 'Usando Hardcoded Fallback'}
+                        <div className="mt-4 p-3 bg-white/5 rounded-xl border border-white/5 flex items-center gap-3">
+                             <Key size={14} className="text-gray-400" />
+                             <p className="text-[10px] text-gray-400 font-mono break-all flex-1">
+                                <strong className="text-gray-300">Chave Fixa:</strong> AIzaSyD...AzIsA (Definida em services/gemini.ts)
                              </p>
                         </div>
                     </div>
