@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase, checkDatabaseConnection } from '../services/supabase';
-import { Mail, Lock, Loader2, ArrowRight, Zap, Hexagon, Activity, Cpu, Database, ShieldCheck, Globe } from 'lucide-react';
+import { validateGeminiConnection } from '../services/gemini';
+import { Mail, Lock, Loader2, ArrowRight, Zap, Hexagon, Activity, Database, ShieldCheck, Globe, Bot } from 'lucide-react';
 
 const Login: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -8,10 +9,12 @@ const Login: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [dbStatus, setDbStatus] = useState<'checking' | 'online' | 'offline'>('checking');
+  const [aiStatus, setAiStatus] = useState<'checking' | 'online' | 'offline'>('checking');
   const [focusedField, setFocusedField] = useState<string | null>(null);
 
   useEffect(() => {
     checkDatabaseConnection().then(({ status }) => setDbStatus(status));
+    validateGeminiConnection().then(({ success }) => setAiStatus(success ? 'online' : 'offline'));
   }, []);
 
   const handleAuth = async (e: React.FormEvent) => {
@@ -39,31 +42,6 @@ const Login: React.FC = () => {
   return (
     <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden font-sans bg-[#020205] selection:bg-cyan-500/30 selection:text-white">
       
-      <style>{`
-        @keyframes moveGrid {
-          0% { transform: perspective(1000px) rotateX(60deg) translateY(0); opacity: 0.3; }
-          100% { transform: perspective(1000px) rotateX(60deg) translateY(100px); opacity: 0.3; }
-        }
-        @keyframes floatCard {
-          0%, 100% { transform: translateY(0px); }
-          50% { transform: translateY(-15px); }
-        }
-        @keyframes orbit {
-          from { transform: rotate(0deg) translateX(80px) rotate(0deg); }
-          to { transform: rotate(360deg) translateX(80px) rotate(-360deg); }
-        }
-        @keyframes spinSlow {
-          to { transform: rotate(360deg); }
-        }
-        @keyframes spinReverse {
-          to { transform: rotate(-360deg); }
-        }
-        @keyframes pulseGlow {
-          0%, 100% { box-shadow: 0 0 20px rgba(99,102,241,0.2); }
-          50% { box-shadow: 0 0 40px rgba(99,102,241,0.5); }
-        }
-      `}</style>
-
       {/* --- 1. Deep Space Background --- */}
       <div className="absolute inset-0 z-0 bg-[#020205]">
           {/* Volumetric Lights */}
@@ -71,21 +49,22 @@ const Login: React.FC = () => {
           <div className="absolute bottom-[-20%] right-[-10%] w-[800px] h-[800px] bg-cyan-900/10 rounded-full blur-[120px]"></div>
           
           {/* Infinite Grid Floor */}
-          <div className="absolute bottom-[-30%] left-[-50%] right-[-50%] h-[100%] z-0"
+          <div className="absolute bottom-[-30%] left-[-50%] right-[-50%] h-[100%] z-0 animate-move-grid"
                style={{
                    backgroundImage: 'linear-gradient(rgba(99, 102, 241, 0.3) 1px, transparent 1px), linear-gradient(90deg, rgba(99, 102, 241, 0.3) 1px, transparent 1px)',
                    backgroundSize: '60px 60px',
-                   animation: 'moveGrid 4s linear infinite',
-                   maskImage: 'linear-gradient(to bottom, transparent 0%, black 40%, black 100%)'
+                   maskImage: 'linear-gradient(to bottom, transparent 0%, black 40%, black 100%)',
+                   WebkitMaskImage: 'linear-gradient(to bottom, transparent 0%, black 40%, black 100%)'
                }}>
           </div>
           
-          {/* Floating Dust Particles */}
-          <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.03]"></div>
+          {/* Floating Dust Particles - URL externa opcional, se falhar não quebra o app */}
+          <div className="absolute inset-0 opacity-[0.03]"></div>
       </div>
 
       {/* --- 2. System Status Badge --- */}
-      <div className="absolute top-8 right-8 z-50 animate-fade-in">
+      <div className="absolute top-8 right-8 z-50 animate-fade-in flex flex-col gap-2 items-end">
+          {/* DB Status */}
           <div className={`flex items-center gap-3 px-4 py-2 rounded-full border backdrop-blur-md transition-all duration-500 ${dbStatus === 'online' ? 'bg-black/40 border-emerald-500/30 shadow-[0_0_20px_rgba(16,185,129,0.15)]' : 'bg-red-900/20 border-red-500/30'}`}>
               <div className="relative flex h-2 w-2">
                 {dbStatus === 'online' && <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>}
@@ -95,12 +74,19 @@ const Login: React.FC = () => {
                   {dbStatus === 'online' ? 'System Online' : 'Offline'}
               </span>
           </div>
+
+          {/* AI Status */}
+          <div className={`flex items-center gap-3 px-4 py-2 rounded-full border backdrop-blur-md transition-all duration-500 ${aiStatus === 'online' ? 'bg-black/40 border-blue-500/30 shadow-[0_0_20px_rgba(59,130,246,0.15)]' : 'bg-orange-900/20 border-orange-500/30'}`}>
+              <Bot size={12} className={aiStatus === 'online' ? 'text-blue-400' : 'text-orange-400'} />
+              <span className={`text-[10px] font-bold tracking-widest uppercase ${aiStatus === 'online' ? 'text-blue-400' : 'text-orange-400'}`}>
+                  {aiStatus === 'checking' ? 'Checking AI...' : aiStatus === 'online' ? 'AI Ready' : 'AI Config Missing'}
+              </span>
+          </div>
       </div>
 
       {/* --- 3. Main Crystal Card --- */}
       <div 
-        className="w-full max-w-[1150px] min-h-[700px] grid grid-cols-1 lg:grid-cols-2 bg-[#090b12]/70 backdrop-blur-2xl rounded-[3rem] border border-white/10 relative z-10 shadow-[0_30px_80px_rgba(0,0,0,0.8)] overflow-hidden animate-slide-up"
-        style={{ animation: 'floatCard 8s ease-in-out infinite' }}
+        className="w-full max-w-[1150px] min-h-[700px] grid grid-cols-1 lg:grid-cols-2 bg-[#090b12]/70 backdrop-blur-2xl rounded-[3rem] border border-white/10 relative z-10 shadow-[0_30px_80px_rgba(0,0,0,0.8)] overflow-hidden animate-slide-up lg:animate-float-card"
       >
         {/* Internal Glow Effects */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[1px] bg-gradient-to-r from-transparent via-indigo-500 to-transparent opacity-50"></div>
@@ -119,17 +105,17 @@ const Login: React.FC = () => {
                     <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[100px] h-[100px] bg-indigo-600 rounded-full blur-[80px] animate-pulse"></div>
 
                     {/* Ring 1 - Vertical Spin */}
-                    <div className="absolute inset-0 rounded-full border border-indigo-500/20" style={{ animation: 'spinSlow 15s linear infinite' }}>
+                    <div className="absolute inset-0 rounded-full border border-indigo-500/20 animate-spin-slow">
                         <div className="absolute top-0 left-1/2 w-3 h-3 bg-indigo-400 rounded-full blur-[2px] shadow-[0_0_15px_#818cf8]"></div>
                     </div>
 
                     {/* Ring 2 - Reverse Horizontal */}
-                    <div className="absolute inset-10 rounded-full border border-cyan-500/20" style={{ animation: 'spinReverse 20s linear infinite' }}>
+                    <div className="absolute inset-10 rounded-full border border-cyan-500/20 animate-spin-reverse">
                         <div className="absolute bottom-0 left-1/2 w-2 h-2 bg-cyan-400 rounded-full blur-[1px] shadow-[0_0_10px_#22d3ee]"></div>
                     </div>
 
                     {/* Ring 3 - Tilted */}
-                    <div className="absolute inset-20 rounded-full border border-fuchsia-500/10 border-dashed" style={{ animation: 'spinSlow 25s linear infinite reverse' }}></div>
+                    <div className="absolute inset-20 rounded-full border border-fuchsia-500/10 border-dashed animate-spin-slow"></div>
 
                     {/* Center Core */}
                     <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-24 h-24 bg-gradient-to-br from-indigo-900 to-black rounded-full border border-white/10 flex items-center justify-center shadow-[0_0_30px_rgba(99,102,241,0.3)] z-10 backdrop-blur-md">

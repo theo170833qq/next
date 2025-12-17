@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { User, Bell, Shield, Save, Loader2, LogOut, CreditCard, Server, Wifi, CheckCircle2, XCircle, RefreshCw, Trash2, Bot, AlertTriangle, Key } from 'lucide-react';
+import { User, Bell, Shield, Save, Loader2, LogOut, CreditCard, Server, Wifi, CheckCircle2, XCircle, RefreshCw, Trash2, Bot, AlertTriangle, Key, Copy, ExternalLink } from 'lucide-react';
 import { checkDatabaseConnection } from '../services/supabase';
 import { validateGeminiConnection } from '../services/gemini';
 import { useAuth } from '../context/AuthContext';
@@ -199,41 +199,77 @@ const Settings: React.FC = () => {
                             </div>
 
                             {/* AI Engine Status Block */}
-                            <div className="p-4 rounded-xl bg-onyx-950 border border-white/5 flex items-center justify-between">
-                                <div className="flex items-center gap-3">
-                                    <div className={`w-10 h-10 rounded-full flex items-center justify-center ${aiStatus === 'valid' ? 'bg-blue-500/10' : aiStatus === 'invalid' ? 'bg-red-500/10' : 'bg-gray-500/10'}`}>
-                                        <Bot size={18} className={aiStatus === 'valid' ? 'text-blue-400' : aiStatus === 'invalid' ? 'text-red-400' : 'text-gray-400'} />
+                            <div className="p-4 rounded-xl bg-onyx-950 border border-white/5 flex flex-col gap-3">
+                                <div className="flex items-center justify-between w-full">
+                                    <div className="flex items-center gap-3">
+                                        <div className={`w-10 h-10 rounded-full flex items-center justify-center ${aiStatus === 'valid' ? 'bg-blue-500/10' : aiStatus === 'invalid' ? 'bg-red-500/10' : 'bg-gray-500/10'}`}>
+                                            <Bot size={18} className={aiStatus === 'valid' ? 'text-blue-400' : aiStatus === 'invalid' ? 'text-red-400' : 'text-gray-400'} />
+                                        </div>
+                                        <div>
+                                            <p className="text-sm font-bold text-white">Google Gemini AI</p>
+                                            <p className="text-xs text-gray-500">Conexão & Variáveis</p>
+                                        </div>
                                     </div>
-                                    <div>
-                                        <p className="text-sm font-bold text-white">Google Gemini AI</p>
-                                        <p className="text-xs text-gray-500">Variável de Ambiente (VITE_...)</p>
-                                    </div>
-                                </div>
-                                
-                                <div className="flex flex-col items-end">
-                                    {aiStatus === 'checking' && <span className="text-xs text-yellow-400 flex items-center"><Loader2 size={12} className="animate-spin mr-1"/> Verificando...</span>}
                                     
-                                    {aiStatus === 'valid' && (
-                                        <>
-                                            <span className="text-xs text-emerald-400 flex items-center font-bold"><CheckCircle2 size={12} className="mr-1"/> {aiMessage}</span>
-                                            <span className="text-[10px] text-gray-600 mt-1">{aiLatency}ms resposta</span>
-                                        </>
-                                    )}
+                                    <div className="flex flex-col items-end">
+                                        {aiStatus === 'checking' && <span className="text-xs text-yellow-400 flex items-center"><Loader2 size={12} className="animate-spin mr-1"/> Verificando...</span>}
+                                        
+                                        {aiStatus === 'valid' && (
+                                            <>
+                                                <span className="text-xs text-emerald-400 flex items-center font-bold"><CheckCircle2 size={12} className="mr-1"/> {aiMessage}</span>
+                                                <span className="text-[10px] text-gray-600 mt-1">{aiLatency}ms resposta</span>
+                                            </>
+                                        )}
 
-                                    {aiStatus === 'invalid' && (
-                                        <>
-                                            <span className="text-xs text-red-400 flex items-center font-bold text-right"><AlertTriangle size={12} className="mr-1"/> {aiMessage}</span>
-                                            <span className="text-[10px] text-gray-500 mt-1">Configure o .env ou Vercel Env Vars</span>
-                                        </>
-                                    )}
+                                        {aiStatus === 'invalid' && (
+                                            <span className="text-xs text-red-400 flex items-center font-bold text-right"><AlertTriangle size={12} className="mr-1"/> Falha na Configuração</span>
+                                        )}
+                                    </div>
                                 </div>
+
+                                {/* Helpers para quando a chave é inválida */}
+                                {aiStatus === 'invalid' && (
+                                    <div className="w-full mt-2 p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
+                                        <div className="flex flex-col gap-2">
+                                            <p className="text-[11px] text-gray-300">
+                                                A variável de ambiente não foi encontrada ou a chave é inválida. Configure no seu arquivo <code>.env</code> ou no painel da Vercel:
+                                            </p>
+                                            
+                                            <div className="flex items-center gap-2 bg-onyx-900/80 p-2 rounded border border-white/10">
+                                                <Key size={12} className="text-indigo-400 shrink-0"/>
+                                                <code className="text-[11px] text-indigo-300 font-mono flex-1">API_KEY</code>
+                                                <button 
+                                                    onClick={() => {
+                                                        navigator.clipboard.writeText("API_KEY");
+                                                        alert("Nome da variável copiado!");
+                                                    }} 
+                                                    className="p-1 hover:bg-white/10 rounded transition-colors text-gray-400 hover:text-white"
+                                                    title="Copiar nome da variável"
+                                                >
+                                                    <Copy size={12} />
+                                                </button>
+                                            </div>
+
+                                            <div className="flex justify-end mt-1">
+                                                <a 
+                                                    href="https://aistudio.google.com/app/apikey" 
+                                                    target="_blank" 
+                                                    rel="noopener noreferrer"
+                                                    className="text-[11px] text-indigo-400 hover:text-indigo-300 hover:underline flex items-center gap-1 font-bold"
+                                                >
+                                                    Gerar Chave no Google AI Studio <ExternalLink size={10} />
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         </div>
                         
                         <div className="mt-4 p-3 bg-white/5 rounded-xl border border-white/5 flex items-center gap-3">
                              <Key size={14} className="text-gray-400" />
                              <p className="text-[10px] text-gray-400 font-mono break-all flex-1">
-                                <strong className="text-gray-300">Método de Segurança:</strong> Utilizando <code>VITE_GOOGLE_API_KEY</code> do ambiente.
+                                <strong className="text-gray-300">Método de Segurança:</strong> Utilizando <code>API_KEY</code> do ambiente.
                              </p>
                         </div>
                     </div>

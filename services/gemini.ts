@@ -1,16 +1,14 @@
 import { GoogleGenAI } from "@google/genai";
 
 // --- CONFIGURAÇÃO DA API ---
-// A chave agora é carregada das variáveis de ambiente (.env)
-// Nome obrigatório no Vite: VITE_GOOGLE_API_KEY
-const API_KEY = import.meta.env.VITE_GOOGLE_API_KEY;
-
+// A chave deve ser carregada de process.env.API_KEY conforme guidelines @google/genai
 const getClient = () => {
-  if (!API_KEY || API_KEY.length < 10) {
-    console.error("CRÍTICO: Chave de API não encontrada nas variáveis de ambiente.");
+  const apiKey = process.env.API_KEY;
+  if (!apiKey || apiKey.length < 10) {
+    console.error("CRÍTICO: Variável de ambiente 'API_KEY' não encontrada ou inválida.");
     throw new Error("API_KEY_MISSING");
   }
-  return new GoogleGenAI({ apiKey: API_KEY });
+  return new GoogleGenAI({ apiKey });
 };
 
 // Tratamento centralizado de erros
@@ -50,7 +48,7 @@ export const validateGeminiConnection = async (): Promise<{ success: boolean; me
         let errorMsg = handleGeminiError(error);
         
         if (errorMsg === 'API_KEY_MISSING') {
-             return { success: false, message: "Variável VITE_GOOGLE_API_KEY não encontrada", latency: 0 };
+             return { success: false, message: "Variável API_KEY não encontrada", latency: 0 };
         }
 
         return { 
