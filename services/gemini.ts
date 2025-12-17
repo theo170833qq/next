@@ -1,16 +1,37 @@
 import { GoogleGenAI } from "@google/genai";
 
 // --- CONFIGURAÇÃO DA API ---
-// Chave fixada e limpa de espaços vazios para garantir conexão
-const RAW_KEY = "AIzaSyD2DMPL7qnm-aJdTx6inXwhWckghPAzIsA";
-const API_KEY = RAW_KEY.trim();
+// A chave agora é carregada das variáveis de ambiente (.env)
+// Nome obrigatório no Vite: VITE_GOOGLE_API_KEY
+const API_KEY = import.meta.env.VITE_GOOGLE_API_KEY;
 
 const getClient = () => {
   if (!API_KEY || API_KEY.length < 10) {
-    console.error("CRÍTICO: Chave de API inválida no código.");
-    throw new Error("Chave de API não configurada corretamente.");
+    console.error("CRÍTICO: Chave de API não encontrada nas variáveis de ambiente.");
+    throw new Error("API_KEY_MISSING");
   }
   return new GoogleGenAI({ apiKey: API_KEY });
+};
+
+// Tratamento centralizado de erros
+const handleGeminiError = (error: any): string => {
+    console.error("Gemini API Error:", error);
+    const msg = error.message || error.toString();
+    
+    // Erro específico para quando a env var não existe
+    if (msg.includes("API_KEY_MISSING")) {
+        return "API_KEY_MISSING";
+    }
+
+    // Detecção de erros da API do Google
+    if (msg.includes("leaked") || msg.includes("PERMISSION_DENIED") || msg.includes("API key not valid")) {
+        return "FATAL: Chave de API inválida ou bloqueada. Verifique suas configurações.";
+    }
+    if (msg.includes("403")) return "Erro 403: Acesso negado. A chave pode estar expirada.";
+    if (msg.includes("429")) return "Erro 429: Muitos pedidos (Quota excedida).";
+    if (msg.includes("404")) return "Erro 404: Modelo não encontrado.";
+    
+    return `Erro na IA: ${msg}`;
 };
 
 // --- FUNÇÕES REAIS ---
@@ -19,26 +40,22 @@ export const validateGeminiConnection = async (): Promise<{ success: boolean; me
     const start = performance.now();
     try {
         const ai = getClient();
-        // Teste simples de ping
         await ai.models.generateContent({
             model: 'gemini-2.5-flash',
             contents: 'ping',
         });
         const end = performance.now();
-        return { success: true, message: "Conectado: API Google Gemini Ativa", latency: Math.round(end - start) };
+        return { success: true, message: "Conectado: Variável de Ambiente Configurada", latency: Math.round(end - start) };
     } catch (error: any) {
-        console.error("Erro de Conexão Gemini:", error);
+        let errorMsg = handleGeminiError(error);
         
-        let msg = error.message || "Erro desconhecido";
-        // Tradução de erros comuns para facilitar debug
-        if (msg.includes("403")) msg = "Erro 403: Chave bloqueada ou sem permissão.";
-        if (msg.includes("429")) msg = "Erro 429: Limite de requisições excedido (Quota).";
-        if (msg.includes("404")) msg = "Erro 404: Modelo gemini-2.5-flash não encontrado para esta chave.";
-        if (msg.includes("key")) msg = "Erro na Chave de API.";
-        
+        if (errorMsg === 'API_KEY_MISSING') {
+             return { success: false, message: "Variável VITE_GOOGLE_API_KEY não encontrada", latency: 0 };
+        }
+
         return { 
             success: false, 
-            message: msg, 
+            message: errorMsg, 
             latency: 0 
         };
     }
@@ -56,10 +73,9 @@ export const generateMarketingContent = async (topic: string, platform: string):
             - Use formatação Markdown (negrito, listas).
             - Inclua hashtags estratégicas no final.`,
         });
-        return response.text || "⚠️ A IA não retornou texto. Tente novamente.";
+        return response.text || "⚠️ A IA não retornou texto.";
     } catch (e: any) {
-        console.error("Erro Marketing:", e);
-        return `❌ Erro na API: ${e.message}. Verifique a conexão nas Configurações.`;
+        return handleGeminiError(e);
     }
 };
 
@@ -86,15 +102,13 @@ export const analyzeFinancialData = async (dataContext: string): Promise<any> =>
         });
 
         const text = response.text || "{}";
-        // Limpeza agressiva para garantir JSON
         const cleanJson = text.replace(/```json|```/g, '').trim();
         return JSON.parse(cleanJson);
     } catch (e: any) {
-        console.error("Erro Financeiro:", e);
-        // Fallback elegante para não quebrar a tela de gráficos
+        const errMsg = handleGeminiError(e);
         return {
-            analysis: `⚠️ Não foi possível processar a análise com a IA no momento. Erro: ${e.message}`,
-            data: [] // Retorna array vazio para não quebrar os gráficos
+            analysis: errMsg === 'API_KEY_MISSING' ? "API_KEY_MISSING" : `⚠️ Não foi possível processar: ${errMsg}`,
+            data: []
         };
     }
 };
@@ -115,8 +129,7 @@ export const getStrategicAdvice = async (query: string, history: string[]): Prom
         });
         return response.text || "⚠️ Sem resposta da IA.";
     } catch (e: any) {
-        console.error("Erro Advisor:", e);
-        return `❌ Erro de conexão com Consultor IA: ${e.message}`;
+        return handleGeminiError(e);
     }
 }
 
@@ -140,8 +153,7 @@ export const generateSalesStrategy = async (product: string, target: string, typ
         });
         return response.text || "";
     } catch (e: any) {
-        console.error("Erro Sales:", e);
-        return `❌ Erro ao gerar estratégia: ${e.message}`;
+        return handleGeminiError(e);
     }
 };
 
@@ -160,8 +172,7 @@ export const generateHRContent = async (role: string, culture: string, type: str
         });
         return response.text || "";
     } catch (e: any) {
-         console.error("Erro HR:", e);
-         return `❌ Erro RH: ${e.message}`;
+         return handleGeminiError(e);
     }
 };
 
@@ -181,8 +192,7 @@ export const generateLegalDoc = async (docType: string, parties: string, details
         });
         return response.text || "";
     } catch (e: any) {
-        console.error("Erro Legal:", e);
-        return `❌ Erro Jurídico: ${e.message}`;
+        return handleGeminiError(e);
     }
 };
 
@@ -207,8 +217,7 @@ export const generateProductSpec = async (featureName: string, userGoal: string,
         });
         return response.text || "";
     } catch (e: any) {
-        console.error("Erro Product:", e);
-        return `❌ Erro de Produto: ${e.message}`;
+        return handleGeminiError(e);
     }
 };
 
@@ -229,7 +238,6 @@ export const generateSupportReply = async (msg: string, tone: string): Promise<s
         });
         return response.text || "";
     } catch (e: any) {
-        console.error("Erro Support:", e);
-        return `❌ Erro de Suporte: ${e.message}`;
+        return handleGeminiError(e);
     }
 };

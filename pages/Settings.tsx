@@ -28,7 +28,7 @@ const Settings: React.FC = () => {
   const runSystemCheck = async () => {
     setDbStatus('checking');
     setAiStatus('checking');
-    setAiMessage('Testando chave...');
+    setAiMessage('Verificando Env Var...');
     
     // DB Check
     const dbResult = await checkDatabaseConnection();
@@ -198,7 +198,7 @@ const Settings: React.FC = () => {
                                 </div>
                             </div>
 
-                            {/* AI Engine Status Block - Now with REAL Validation */}
+                            {/* AI Engine Status Block */}
                             <div className="p-4 rounded-xl bg-onyx-950 border border-white/5 flex items-center justify-between">
                                 <div className="flex items-center gap-3">
                                     <div className={`w-10 h-10 rounded-full flex items-center justify-center ${aiStatus === 'valid' ? 'bg-blue-500/10' : aiStatus === 'invalid' ? 'bg-red-500/10' : 'bg-gray-500/10'}`}>
@@ -206,12 +206,12 @@ const Settings: React.FC = () => {
                                     </div>
                                     <div>
                                         <p className="text-sm font-bold text-white">Google Gemini AI</p>
-                                        <p className="text-xs text-gray-500">Motor Generativo (Hardcoded Key)</p>
+                                        <p className="text-xs text-gray-500">Variável de Ambiente (VITE_...)</p>
                                     </div>
                                 </div>
                                 
                                 <div className="flex flex-col items-end">
-                                    {aiStatus === 'checking' && <span className="text-xs text-yellow-400 flex items-center"><Loader2 size={12} className="animate-spin mr-1"/> Validando...</span>}
+                                    {aiStatus === 'checking' && <span className="text-xs text-yellow-400 flex items-center"><Loader2 size={12} className="animate-spin mr-1"/> Verificando...</span>}
                                     
                                     {aiStatus === 'valid' && (
                                         <>
@@ -222,8 +222,8 @@ const Settings: React.FC = () => {
 
                                     {aiStatus === 'invalid' && (
                                         <>
-                                            <span className="text-xs text-red-400 flex items-center font-bold"><AlertTriangle size={12} className="mr-1"/> {aiMessage}</span>
-                                            <span className="text-[10px] text-gray-500 mt-1">Verifique o console para logs</span>
+                                            <span className="text-xs text-red-400 flex items-center font-bold text-right"><AlertTriangle size={12} className="mr-1"/> {aiMessage}</span>
+                                            <span className="text-[10px] text-gray-500 mt-1">Configure o .env ou Vercel Env Vars</span>
                                         </>
                                     )}
                                 </div>
@@ -233,7 +233,7 @@ const Settings: React.FC = () => {
                         <div className="mt-4 p-3 bg-white/5 rounded-xl border border-white/5 flex items-center gap-3">
                              <Key size={14} className="text-gray-400" />
                              <p className="text-[10px] text-gray-400 font-mono break-all flex-1">
-                                <strong className="text-gray-300">Chave Fixa:</strong> AIzaSyD...AzIsA (Definida em services/gemini.ts)
+                                <strong className="text-gray-300">Método de Segurança:</strong> Utilizando <code>VITE_GOOGLE_API_KEY</code> do ambiente.
                              </p>
                         </div>
                     </div>

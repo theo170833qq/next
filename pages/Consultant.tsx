@@ -51,24 +51,22 @@ const Consultant: React.FC<ConsultantProps> = ({ onNavigate }) => {
         
         clearInterval(interval);
         
-        if (response === 'API_KEY_ERROR_FLAG') {
-            setMessages(prev => [...prev, { 
-                role: 'model', 
-                text: "A chave de API configurada é inválida ou expirou.", 
-                isError: true,
-                isApiKeyError: true 
-            }]);
-        } else {
-             // Verifica se a resposta parece um erro genérico
-            const isError = response.startsWith('⛔') || response.startsWith('⚠️');
-            setMessages(prev => [...prev, { role: 'model', text: response, isError }]);
-        }
+        // Verifica se é erro fatal de chave vazada ou erro genérico
+        const isLeakedKey = response.includes("vazou") || response.includes("bloqueada") || response.includes("FATAL");
+        const isError = response.includes("Erro") || response.includes("FATAL");
+
+        setMessages(prev => [...prev, { 
+            role: 'model', 
+            text: response, 
+            isError: isError,
+            isApiKeyError: isLeakedKey
+        }]);
         
     } catch (error) {
         clearInterval(interval);
         setMessages(prev => [...prev, { 
             role: 'model', 
-            text: "Falha crítica ao conectar com o serviço de IA.", 
+            text: "Ocorreu um erro inesperado na comunicação com a IA.", 
             isError: true 
         }]);
     } finally {
@@ -167,16 +165,18 @@ const Consultant: React.FC<ConsultantProps> = ({ onNavigate }) => {
                                             );
                                         })}
                                         
-                                        {/* Botão de Correção de API Key */}
+                                        {/* Botão de Correção de API Key para Erros Fatais */}
                                         {msg.isApiKeyError && (
                                             <div className="mt-4 pt-3 border-t border-red-500/30">
-                                                <p className="text-xs text-red-200 mb-2 font-medium">Você precisa inserir uma chave válida.</p>
+                                                <p className="text-xs text-red-200 mb-2 font-medium">
+                                                    Sua chave foi bloqueada pelo Google. Gere uma nova em <a href="https://aistudio.google.com/" target="_blank" rel="noopener noreferrer" className="underline font-bold text-white hover:text-indigo-300">Google AI Studio</a>.
+                                                </p>
                                                 <button 
                                                     onClick={() => onNavigate && onNavigate('api')}
                                                     className="flex items-center gap-2 px-4 py-2 bg-red-500/20 hover:bg-red-500/30 border border-red-500/50 rounded-lg text-red-100 text-xs font-bold transition-all hover:scale-105"
                                                 >
                                                     <Settings size={14} />
-                                                    Corrigir nas Configurações
+                                                    Ver Configurações
                                                     <ChevronRight size={14} />
                                                 </button>
                                             </div>
