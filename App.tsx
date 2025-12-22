@@ -22,7 +22,7 @@ const App: React.FC = () => {
   const { companyData } = useCompany();
 
   // Timestamp de Build para verificar atualização
-  const BUILD_VERSION = "v1.3 (Enterprise Login)";
+  const BUILD_VERSION = "v1.4 (Visual Fix)";
 
   // Tela de Loading Inicial da Aplicação
   if (loading) {
@@ -87,9 +87,9 @@ const App: React.FC = () => {
              {/* Deep base */}
             <div className="absolute inset-0 bg-onyx-950"></div>
             
-            {/* Mesh Gradients */}
-            <div className="absolute top-[-20%] left-[-10%] w-[800px] h-[800px] bg-indigo-600/10 rounded-full blur-[120px] animate-pulse" style={{animationDuration: '8s'}}></div>
-            <div className="absolute bottom-[-20%] right-[-5%] w-[600px] h-[600px] bg-purple-600/10 rounded-full blur-[100px] animate-float"></div>
+            {/* Mesh Gradients - Increased opacity slightly for visibility */}
+            <div className="absolute top-[-20%] left-[-10%] w-[800px] h-[800px] bg-indigo-600/15 rounded-full blur-[120px] animate-pulse" style={{animationDuration: '8s'}}></div>
+            <div className="absolute bottom-[-20%] right-[-5%] w-[600px] h-[600px] bg-purple-600/15 rounded-full blur-[100px] animate-float"></div>
             
             {/* Grain overlay for texture */}
             <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")` }}></div>
@@ -99,7 +99,7 @@ const App: React.FC = () => {
             {renderContent()}
         </div>
 
-        {/* Version Indicator for Debugging Vercel Updates */}
+        {/* Version Indicator */}
         <div className="fixed bottom-2 right-2 z-50 text-[10px] text-gray-700 bg-white/5 px-2 py-1 rounded pointer-events-none">
             Build: {BUILD_VERSION}
         </div>

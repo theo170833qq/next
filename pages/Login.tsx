@@ -1,13 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { supabase, checkDatabaseConnection } from '../services/supabase';
 import { validateGeminiConnection } from '../services/gemini';
-import { Mail, Lock, Loader2, ArrowRight, Zap, Hexagon, Activity, Database, ShieldCheck, Globe, Bot, UserPlus, LogIn, CheckCircle } from 'lucide-react';
+import { Mail, Lock, Loader2, ArrowRight, Zap, Hexagon, Activity, Database, ShieldCheck, Globe, Bot, LogIn, CheckCircle, LockKeyhole } from 'lucide-react';
 
 const Login: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const [isSignUp, setIsSignUp] = useState(false); // Alternar entre Login e Cadastro
   const [error, setError] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   
@@ -27,43 +26,20 @@ const Login: React.FC = () => {
     setSuccessMsg(null);
 
     try {
-      if (isSignUp) {
-        // --- MODO CADASTRO ---
-        const { data, error } = await supabase.auth.signUp({
-          email,
-          password,
-        });
-        
-        if (error) throw error;
-
-        // Se o Supabase estiver configurado para confirmar email
-        if (data.user && !data.session) {
-            setSuccessMsg("Conta criada com sucesso! Verifique seu e-mail para confirmar o cadastro.");
-            setLoading(false);
-            return; 
-        }
-        // Se o Supabase não exigir confirmação, ele já loga direto (data.session existe)
-
-      } else {
-        // --- MODO LOGIN ---
-        const { error } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
-        if (error) throw error;
-      }
+      // --- MODO APENAS LOGIN (Acesso Restrito) ---
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      if (error) throw error;
+      
     } catch (err: any) {
       if (err.message.includes("Invalid login credentials")) {
-        setError("E-mail ou senha incorretos.");
-      } else if (err.message.includes("User already registered")) {
-        setError("Este e-mail já está cadastrado.");
-      } else if (err.message.includes("Password should be at least")) {
-        setError("A senha deve ter pelo menos 6 caracteres.");
+        setError("Credenciais inválidas. Verifique seu acesso.");
       } else {
-        setError(err.message || "Falha na autenticação.");
+        setError("Falha na autenticação. Contate o suporte.");
       }
     } finally {
-      // Só tira o loading se não tivermos definido uma mensagem de sucesso (que para o fluxo)
       if (!successMsg) {
           setLoading(false);
       }
@@ -187,7 +163,7 @@ const Login: React.FC = () => {
                         Inteligência <br/> <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-cyan-400">Preditiva</span>
                      </h2>
                      <p className="text-gray-400 text-sm max-w-xs leading-relaxed">
-                        Transforme dados complexos em decisões estratégicas com nossa IA proprietária.
+                        Acesso exclusivo para parceiros e empresas licenciadas.
                      </p>
                 </div>
             </div>
@@ -201,16 +177,16 @@ const Login: React.FC = () => {
             <div className="max-w-md mx-auto w-full relative z-10">
                 <div className="mb-10">
                     <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 mb-6 backdrop-blur-sm">
-                         <ShieldCheck size={12} className={isSignUp ? "text-cyan-400" : "text-emerald-400"} />
+                         <ShieldCheck size={12} className="text-emerald-400" />
                          <span className="text-[10px] font-bold text-gray-300 uppercase tracking-widest">
-                            {isSignUp ? "Novo Acesso" : "Acesso Corporativo"}
+                            Área Restrita
                          </span>
                     </div>
                     <h2 className="text-4xl md:text-5xl font-display font-bold text-white mb-3">
-                        {isSignUp ? "Criar Conta" : "Bem-vindo"}
+                        Bem-vindo
                     </h2>
                     <p className="text-gray-400">
-                        {isSignUp ? "Preencha os dados abaixo para gerar suas credenciais." : "Faça login para acessar seu dashboard."}
+                        Insira suas credenciais corporativas para acessar o terminal.
                     </p>
                 </div>
 
@@ -246,7 +222,6 @@ const Login: React.FC = () => {
                     <div className="group">
                          <div className="flex justify-between items-center mb-1.5">
                             <label className={`text-[10px] font-bold uppercase tracking-widest transition-colors ${focusedField === 'password' ? 'text-indigo-400' : 'text-gray-500'}`}>Senha</label>
-                            {!isSignUp && <a href="#" className="text-[10px] text-gray-600 hover:text-white transition-colors">Esqueceu?</a>}
                         </div>
                         <div className={`relative flex items-center bg-[#0d0f14] rounded-xl border transition-all duration-300 group-hover:border-white/20 ${focusedField === 'password' ? 'border-cyan-500 shadow-[0_0_15px_rgba(34,211,238,0.15)] bg-[#12141c]' : 'border-white/10'}`}>
                             <div className="pl-4 pr-3">
@@ -259,7 +234,6 @@ const Login: React.FC = () => {
                                 onFocus={() => setFocusedField('password')}
                                 onBlur={() => setFocusedField(null)}
                                 required
-                                minLength={6}
                                 placeholder="••••••••"
                                 className="w-full bg-transparent border-none py-4 px-0 text-white placeholder-gray-700 focus:ring-0 outline-none text-sm font-medium"
                             />
@@ -288,30 +262,19 @@ const Login: React.FC = () => {
                     >
                          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-indigo-100 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000"></div>
                         <span className="relative z-10 flex items-center justify-center gap-2">
-                             {loading ? <Loader2 className="animate-spin" size={20} /> : (isSignUp ? "Gerar Acesso" : "Entrar na Plataforma")}
+                             {loading ? <Loader2 className="animate-spin" size={20} /> : "Acessar Plataforma"}
                              {!loading && <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />}
                         </span>
                     </button>
                 </form>
 
-                {/* Toggle Login/Sign Up */}
-                <div className="mt-8 flex items-center justify-center">
-                    <button 
-                        onClick={() => {
-                            setIsSignUp(!isSignUp);
-                            setError(null);
-                            setSuccessMsg(null);
-                        }}
-                        className="group flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 hover:bg-white/10 transition-all border border-white/5 hover:border-white/20"
-                    >
-                        {isSignUp ? <LogIn size={14} className="text-gray-400 group-hover:text-white"/> : <UserPlus size={14} className="text-gray-400 group-hover:text-white"/>}
-                        <span className="text-xs font-bold text-gray-400 group-hover:text-white">
-                            {isSignUp ? "Já tenho conta? Fazer Login" : "Novo Cliente? Criar Conta"}
-                        </span>
-                    </button>
+                {/* Secure Access Footer */}
+                <div className="mt-8 flex items-center justify-center gap-2 opacity-50 hover:opacity-100 transition-opacity">
+                    <LockKeyhole size={12} className="text-gray-400" />
+                    <span className="text-[10px] text-gray-400 font-mono">CLIENTES CADASTRADOS APENAS</span>
                 </div>
 
-                <div className="mt-6 flex items-center justify-center gap-2 opacity-40 hover:opacity-100 transition-opacity">
+                <div className="mt-2 flex items-center justify-center gap-2 opacity-30 hover:opacity-100 transition-opacity">
                     <Globe size={12} className="text-gray-400" />
                     <span className="text-[10px] text-gray-400 font-mono">SECURE_ID: 0x8F2A...</span>
                 </div>

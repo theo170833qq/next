@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { generateMarketingContent } from '../services/gemini';
-import { Copy, Loader2, Instagram, Linkedin, Twitter, Sparkles, Image as ImageIcon, Heart, MessageCircle, Share2, Bookmark, Music, Zap, TrendingUp, Activity, BarChart2, Hash, Wand2 } from 'lucide-react';
+import { Copy, Loader2, Instagram, Linkedin, Twitter, Sparkles, Image as ImageIcon, Heart, MessageCircle, Share2, Bookmark, Music, Zap, TrendingUp, Activity, BarChart2, Hash, Wand2, Battery, Wifi, Signal, PlusSquare, Search, User, Home } from 'lucide-react';
 import { ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar } from 'recharts';
 
 const Marketing: React.FC = () => {
@@ -187,39 +187,107 @@ const Marketing: React.FC = () => {
         <div className="lg:col-span-7 flex flex-col gap-6">
             
             {/* The Phone Mockup for Preview */}
-            <div className="glass-card rounded-[3rem] p-8 border border-white/5 flex-1 relative min-h-[600px] flex items-center justify-center bg-black shadow-2xl overflow-hidden ring-8 ring-onyx-900">
+            <div className="glass-card rounded-[3.5rem] p-4 border border-white/5 flex-1 relative min-h-[600px] flex items-center justify-center bg-[#050505] shadow-[0_20px_50px_rgba(0,0,0,0.5)] overflow-hidden ring-[12px] ring-[#1a1d26] z-10">
                 
-                {!generatedContent && !loading && (
-                    <div className="text-center text-gray-500 z-10">
-                        <div className="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-6 border border-white/5 group hover:border-indigo-500/30 transition-colors duration-500">
-                            <ImageIcon size={28} className="group-hover:text-indigo-400 transition-colors" />
-                        </div>
-                        <h3 className="text-lg font-bold text-white mb-2">Preview em Tempo Real</h3>
-                        <p className="font-light text-xs max-w-xs mx-auto text-gray-600">Selecione uma plataforma ao lado para começar.</p>
-                    </div>
-                )}
-                
-                {loading && (
-                     <div className="flex flex-col items-center">
-                        <Loader2 className="animate-spin text-indigo-500 mb-4" size={32} />
-                        <p className="text-xs font-mono text-indigo-400">GERANDO_COPY_E_DESIGN...</p>
-                     </div>
-                )}
+                {/* Phone Notch/Dynamic Island */}
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[120px] h-[26px] bg-black rounded-b-3xl z-50 flex items-center justify-center">
+                    <div className="w-16 h-2 bg-gray-900 rounded-full"></div>
+                </div>
 
-                {generatedContent && !loading && (
-                     <div className="w-full max-w-[340px] bg-white text-black rounded-[2rem] overflow-hidden shadow-2xl animate-slide-up relative z-10 flex flex-col h-full max-h-[650px]">
-                        
-                        {/* Fake Phone Header */}
-                        <div className="h-8 bg-white flex justify-between items-center px-6 pt-2 shrink-0">
-                             <span className="text-[10px] font-bold">19:42</span>
-                             <div className="flex gap-1">
-                                <div className="w-3 h-3 bg-black rounded-full"></div>
-                                <div className="w-3 h-3 bg-transparent border border-black rounded-full"></div>
+                {/* Status Bar Mock */}
+                <div className="absolute top-2 w-full px-8 flex justify-between text-[10px] text-white/50 font-bold z-40">
+                    <span>9:41</span>
+                    <div className="flex gap-1.5 items-center">
+                         <Signal size={10} />
+                         <Wifi size={10} />
+                         <Battery size={10} />
+                    </div>
+                </div>
+
+                {/* Empty State / Loading State (SKELETON UI) */}
+                {!generatedContent && (
+                    <div className="w-full h-full bg-white rounded-[2.5rem] overflow-hidden relative flex flex-col pt-8 animate-fade-in">
+                        {/* Mock App Header */}
+                        <div className="px-4 py-3 flex justify-between items-center border-b border-gray-100">
+                             <div className="w-24 h-6 bg-gray-200 rounded animate-pulse"></div>
+                             <div className="flex gap-3">
+                                 <div className="w-6 h-6 bg-gray-200 rounded-full animate-pulse"></div>
+                                 <div className="w-6 h-6 bg-gray-200 rounded-full animate-pulse"></div>
                              </div>
                         </div>
 
+                        {/* Stories Skeleton */}
+                        <div className="flex gap-3 px-4 py-3 overflow-hidden border-b border-gray-50">
+                            {[1,2,3,4].map(i => (
+                                <div key={i} className="flex flex-col items-center gap-1">
+                                    <div className="w-14 h-14 rounded-full bg-gray-200 border-2 border-white ring-2 ring-gray-100 animate-pulse"></div>
+                                    <div className="w-10 h-2 bg-gray-100 rounded animate-pulse"></div>
+                                </div>
+                            ))}
+                        </div>
+
+                        {/* Feed Post Skeleton */}
+                        <div className="flex-1 p-0 space-y-4">
+                            {/* Post Header */}
+                            <div className="px-4 py-3 flex items-center gap-3">
+                                <div className="w-8 h-8 rounded-full bg-gray-200 animate-pulse"></div>
+                                <div className="space-y-1">
+                                    <div className="w-20 h-3 bg-gray-200 rounded animate-pulse"></div>
+                                    <div className="w-12 h-2 bg-gray-100 rounded animate-pulse"></div>
+                                </div>
+                            </div>
+                            
+                            {/* Post Image Placeholder */}
+                            <div className="aspect-[4/5] bg-gray-100 relative flex items-center justify-center">
+                                {loading ? (
+                                    <div className="text-center">
+                                         <div className="w-16 h-16 border-4 border-indigo-200 border-t-indigo-500 rounded-full animate-spin mx-auto mb-4"></div>
+                                         <p className="text-xs font-bold text-indigo-500 animate-pulse">CRIANDO VISUAL...</p>
+                                    </div>
+                                ) : (
+                                    <div className="text-center text-gray-300">
+                                        <ImageIcon size={48} className="mx-auto mb-2 opacity-50"/>
+                                        <p className="text-xs font-medium uppercase tracking-widest">Aguardando Prompt</p>
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Post Actions & Text */}
+                            <div className="px-4 space-y-3 pb-8">
+                                <div className="flex justify-between">
+                                    <div className="flex gap-3">
+                                        <div className="w-6 h-6 bg-gray-200 rounded animate-pulse"></div>
+                                        <div className="w-6 h-6 bg-gray-200 rounded animate-pulse"></div>
+                                        <div className="w-6 h-6 bg-gray-200 rounded animate-pulse"></div>
+                                    </div>
+                                    <div className="w-6 h-6 bg-gray-200 rounded animate-pulse"></div>
+                                </div>
+                                <div className="w-32 h-3 bg-gray-200 rounded animate-pulse"></div>
+                                <div className="space-y-1">
+                                    <div className="w-full h-3 bg-gray-100 rounded animate-pulse"></div>
+                                    <div className="w-full h-3 bg-gray-100 rounded animate-pulse"></div>
+                                    <div className="w-2/3 h-3 bg-gray-100 rounded animate-pulse"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Bottom Nav Mock */}
+                        <div className="absolute bottom-0 w-full h-16 bg-white border-t border-gray-100 flex justify-around items-center px-4 pb-2">
+                             <Home size={24} className="text-gray-300" />
+                             <Search size={24} className="text-gray-300" />
+                             <PlusSquare size={24} className="text-gray-300" />
+                             <Heart size={24} className="text-gray-300" />
+                             <User size={24} className="text-gray-300" />
+                        </div>
+                    </div>
+                )}
+                
+                {/* Generated Content View */}
+                {generatedContent && !loading && (
+                     <div className="w-full h-full bg-white text-black rounded-[2.5rem] overflow-hidden shadow-2xl animate-slide-up relative z-10 flex flex-col pt-8">
+                        
                         {/* Social App Header */}
-                        <div className="p-3 flex items-center border-b border-gray-100 shrink-0">
+                        <div className="p-3 flex items-center border-b border-gray-100 shrink-0 bg-white z-20 relative">
                             <div className={`w-8 h-8 rounded-full bg-gradient-to-tr ${activePlatformData?.gradient} p-[2px]`}>
                                 <div className="w-full h-full bg-white rounded-full p-0.5 overflow-hidden">
                                     <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=NextUser" className="w-full h-full object-cover" alt="avatar" />
@@ -227,50 +295,62 @@ const Marketing: React.FC = () => {
                             </div>
                             <div className="ml-2">
                                 <span className="block font-bold text-xs leading-none mb-0.5">sua_marca</span>
-                                <span className="block text-[9px] text-gray-400 leading-none">Sponsored</span>
+                                <span className="block text-[9px] text-gray-400 leading-none">Patrocinado</span>
                             </div>
                             <span className="ml-auto text-gray-400 text-xs">•••</span>
                         </div>
 
                         {/* Scrollable Content */}
-                        <div className="overflow-y-auto no-scrollbar pb-10">
+                        <div className="overflow-y-auto no-scrollbar pb-10 bg-white flex-1">
                             {/* Image Placeholder */}
-                            <div className="aspect-[4/5] bg-gray-100 flex items-center justify-center relative group overflow-hidden">
+                            <div className="aspect-[4/5] bg-gray-50 flex items-center justify-center relative group overflow-hidden">
                                 <div className={`absolute inset-0 bg-gradient-to-br ${activePlatformData?.gradient} opacity-5`}></div>
                                 <div className="p-6 text-center">
-                                    <ImageIcon className="mx-auto text-gray-300 mb-2" size={32} />
-                                    <p className="text-[10px] text-gray-400 uppercase font-bold tracking-widest mb-2">Prompt de Imagem</p>
-                                    <p className="text-[11px] text-gray-600 italic leading-tight px-4">
-                                        "Uma imagem cinematográfica de..." (Ver prompt completo abaixo)
+                                    <div className="w-16 h-16 bg-white rounded-full shadow-sm flex items-center justify-center mx-auto mb-3">
+                                        <ImageIcon className="text-gray-300" size={24} />
+                                    </div>
+                                    <p className="text-[10px] text-gray-400 uppercase font-bold tracking-widest mb-2">Sugestão de Imagem</p>
+                                    <p className="text-[12px] text-gray-600 italic leading-tight px-4 font-serif">
+                                        "Uma imagem cinematográfica, iluminação de estúdio..."
                                     </p>
                                 </div>
                             </div>
 
                             {/* Actions Bar */}
-                            <div className="px-3 py-2 flex justify-between text-gray-800">
-                                <div className="flex space-x-3">
-                                    <Heart size={20} className="hover:fill-red-500 hover:text-red-500 transition-colors" />
-                                    <MessageCircle size={20} />
-                                    <Share2 size={20} />
+                            <div className="px-3 py-3 flex justify-between text-gray-800 bg-white">
+                                <div className="flex space-x-4">
+                                    <Heart size={22} className="hover:fill-red-500 hover:text-red-500 transition-colors cursor-pointer" />
+                                    <MessageCircle size={22} className="cursor-pointer hover:text-gray-600"/>
+                                    <Share2 size={22} className="cursor-pointer hover:text-gray-600"/>
                                 </div>
-                                <Bookmark size={20} />
+                                <Bookmark size={22} className="cursor-pointer hover:text-gray-600"/>
                             </div>
 
                             {/* Caption Area */}
-                            <div className="px-3 pb-4">
-                                <p className="text-xs font-bold mb-1">2.492 curtidas</p>
+                            <div className="px-3 pb-8 bg-white">
+                                <p className="text-xs font-bold mb-2">2.492 curtidas</p>
                                 <div className="text-xs text-gray-800 space-y-1">
-                                    <span className="font-bold mr-1">sua_marca</span>
+                                    <span className="font-bold mr-2">sua_marca</span>
                                     {generatedContent.split('\n').map((line, i) => {
                                         if(line.trim() === '') return <br key={i}/>;
                                         if(line.includes('#')) {
-                                            return <span key={i} className="text-blue-900 block mt-1">{line}</span>
+                                            return <span key={i} className="text-blue-900 block mt-2 font-medium">{line}</span>
                                         }
-                                        return <span key={i} className="block mt-0.5">{line.replace(/\*\*/g, '')}</span>
+                                        return <span key={i} className="inline">{line.replace(/\*\*/g, '')} </span>
                                     })}
                                 </div>
-                                <p className="text-[9px] text-gray-400 mt-2 uppercase">Ver todos os comentários</p>
+                                <p className="text-[10px] text-gray-400 mt-3 uppercase font-medium">Ver todos os 48 comentários</p>
+                                <p className="text-[9px] text-gray-400 uppercase mt-1">Há 2 horas</p>
                             </div>
+                        </div>
+
+                         {/* Bottom Nav Mock (Always visible) */}
+                        <div className="w-full h-16 bg-white border-t border-gray-100 flex justify-around items-center px-4 pb-2 shrink-0">
+                             <Home size={24} className="text-black" />
+                             <Search size={24} className="text-gray-300" />
+                             <PlusSquare size={24} className="text-gray-300" />
+                             <Heart size={24} className="text-gray-300" />
+                             <User size={24} className="text-gray-300" />
                         </div>
                      </div>
                 )}
