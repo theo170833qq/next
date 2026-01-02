@@ -1,9 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { supabase, checkDatabaseConnection } from '../services/supabase';
 import { validateGeminiConnection } from '../services/gemini';
-import { Mail, Lock, Loader2, ArrowRight, Zap, Hexagon, Activity, Database, ShieldCheck, Globe, Bot, LogIn, CheckCircle, LockKeyhole } from 'lucide-react';
+import { Mail, Lock, Loader2, ArrowRight, Zap, Hexagon, Activity, Database, ShieldCheck, Globe, Bot, LogIn, CheckCircle, LockKeyhole, ArrowLeft } from 'lucide-react';
 
-const Login: React.FC = () => {
+interface LoginProps {
+  onBack?: () => void;
+}
+
+const Login: React.FC<LoginProps> = ({ onBack }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -47,10 +51,20 @@ const Login: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden font-sans bg-[#020205] selection:bg-cyan-500/30 selection:text-white">
+    <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden font-sans bg-[#020408] selection:bg-cyan-500/30 selection:text-white">
       
+      {/* Back Button for Landing Page Navigation */}
+      {onBack && (
+        <button 
+            onClick={onBack}
+            className="absolute top-6 left-6 z-50 flex items-center gap-2 text-gray-400 hover:text-white transition-colors bg-white/5 px-4 py-2 rounded-full backdrop-blur-md"
+        >
+            <ArrowLeft size={16} /> <span className="text-sm font-medium">Voltar para Home</span>
+        </button>
+      )}
+
       {/* --- 1. Deep Space Background --- */}
-      <div className="absolute inset-0 z-0 bg-[#020205]">
+      <div className="absolute inset-0 z-0 bg-[#020408]">
           {/* Volumetric Lights */}
           <div className="absolute top-[-20%] left-[-10%] w-[800px] h-[800px] bg-indigo-900/20 rounded-full blur-[120px] animate-pulse"></div>
           <div className="absolute bottom-[-20%] right-[-10%] w-[800px] h-[800px] bg-cyan-900/10 rounded-full blur-[120px]"></div>

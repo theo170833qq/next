@@ -12,17 +12,21 @@ import Team from './pages/Team';
 import Legal from './pages/Legal';
 import Product from './pages/Product';
 import Support from './pages/Support';
+import LandingPage from './pages/LandingPage';
 import { useAuth } from './context/AuthContext';
 import { useCompany } from './context/CompanyContext';
 import { Loader2 } from 'lucide-react';
 
 const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
+  // State to toggle between Landing Page and Login for unauthenticated users
+  const [showLogin, setShowLogin] = useState(false);
+  
   const { user, loading } = useAuth();
   const { companyData } = useCompany();
 
   // Timestamp de Build para verificar atualização
-  const BUILD_VERSION = "v1.4 (Visual Fix)";
+  const BUILD_VERSION = "v1.5 (Landing Page)";
 
   // Tela de Loading Inicial da Aplicação
   if (loading) {
@@ -39,9 +43,12 @@ const App: React.FC = () => {
     );
   }
 
-  // Se não houver usuário, mostra Login
+  // Lógica de Roteamento para Usuários Não Autenticados
   if (!user) {
-    return <Login />;
+    if (showLogin) {
+      return <Login onBack={() => setShowLogin(false)} />;
+    }
+    return <LandingPage onLoginClick={() => setShowLogin(true)} />;
   }
 
   // Se houver usuário mas não houver dados da empresa, mostra Onboarding
